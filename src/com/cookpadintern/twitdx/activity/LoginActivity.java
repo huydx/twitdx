@@ -19,7 +19,7 @@ import twitter4j.conf.Configuration;
 import twitter4j.conf.ConfigurationBuilder;
 
 public class LoginActivity extends Activity implements OnClickListener {
-    private Button loginButton;
+    private ImageButton loginButton;
     private static Twitter mTwitter;
     private static RequestToken mRequestToken;
     private static SharedPreferences mSharedPreferences;
@@ -28,7 +28,7 @@ public class LoginActivity extends Activity implements OnClickListener {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.login);
-        loginButton = (Button) findViewById(R.id.login);
+        loginButton = (ImageButton) findViewById(R.id.btn_login);
         loginButton.setOnClickListener(this);
         
         //[TODO] detect Internet first
@@ -46,7 +46,7 @@ public class LoginActivity extends Activity implements OnClickListener {
                 e.putString(Const.PREF_KEY_SECRET, accessToken.getTokenSecret());
                 e.putBoolean(Const.LOGGED_IN, true);
                 e.commit();
-                finish();
+                startActivity(new Intent(LoginActivity.this, TimelineActivity.class));
             } catch (Exception e) {
                 Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
             }
@@ -57,7 +57,7 @@ public class LoginActivity extends Activity implements OnClickListener {
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-        case (R.id.login):
+        case (R.id.btn_login):
             oauthExec();
             break;
         default:
