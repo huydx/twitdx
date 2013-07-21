@@ -6,4 +6,7 @@
     <string name="logout">Log-out</string>
     <string name="mention">Mention</string>
     <string name="about">About</string>
+    <string name="timeline">Timeline</string>
+    <string name="BtnTextNormalColor">#ffffff</string>
+    <string name="BtnTextPressedColor">#1abc9c</string>
 </resources>
