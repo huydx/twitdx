@@ -1,12 +1,104 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    >
-<TextView  
-    android:layout_width="fill_parent" 
-    android:layout_height="wrap_content" 
-    android:text="@string/hello"
-    />
+    android:orientation="vertical" >
+
+    <LinearLayout
+        android:id="@+id/menu"
+        android:layout_width="220dip"
+        android:layout_height="fill_parent"
+        android:background="#2c3e50"
+        android:orientation="vertical" >
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="1dip"
+            android:layout_marginTop="50dip"
+            android:background="#000" />
+
+        <Button
+            android:id="@+id/btn_recommendation"
+            android:layout_width="fill_parent"
+            android:layout_height="50dip"
+            android:layout_marginLeft="20dip"
+            android:background="@android:color/transparent"
+            android:gravity="left|center_vertical"
+            android:text="@string/logout"
+            android:textColor="#1abc9c"
+            android:textSize="18dip" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="1dip"
+            android:background="#000" />
+
+        <Button
+            android:id="@+id/btn_urllog"
+            android:layout_width="fill_parent"
+            android:layout_height="50dip"
+            android:layout_marginLeft="20dip"
+            android:background="@android:color/transparent"
+            android:gravity="left|center_vertical"
+            android:text="@string/mention"
+            android:textColor="#FFFFFF"
+            android:textSize="18dip" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="1dip"
+            android:background="#000" />
+
+        <Button
+            android:id="@+id/btn_about"
+            android:layout_width="fill_parent"
+            android:layout_height="50dip"
+            android:layout_marginLeft="20dip"
+            android:background="@android:color/transparent"
+            android:gravity="left|center_vertical"
+            android:text="@string/about"
+            android:textColor="#FFFFFF"
+            android:textSize="18dip" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="1dip"
+            android:background="#000" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/content"
+        android:layout_width="match_parent"
+        android:layout_height="fill_parent"
+        android:orientation="vertical" >
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="50dip"
+            android:background="#009999"
+            android:orientation="horizontal" >
+
+            <ImageButton
+                android:id="@+id/menu_button"
+                android:layout_width="50dip"
+                android:layout_height="50dip"
+                android:background="@android:color/transparent"
+                android:contentDescription="@string/app_name"
+                android:src="@drawable/option" />
+
+           
+        </LinearLayout>
+
+        <ScrollView
+            android:id="@+id/scrollView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" >
+
+            <TextView
+                android:id="@+id/tweetText"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content" />
+        </ScrollView>
+    </LinearLayout>
+
 </LinearLayout>

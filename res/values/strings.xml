@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="hello">Hello World, MainActivity!</string>
-    <string name="app_name">DNPSampleProvider</string>
+    <string name="app_name">twitdx</string>
+    <string name="login">Log-in</string>
+    <string name="splash">twitdx</string>
+    <string name="logout">Log-out</string>
+    <string name="mention">Mention</string>
+    <string name="about">About</string>
 </resources>
