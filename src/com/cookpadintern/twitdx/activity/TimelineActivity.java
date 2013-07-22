@@ -27,6 +27,7 @@ import android.content.SharedPreferences.Editor;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
+import android.view.Window;
 import android.view.View.OnClickListener;
 import android.view.animation.Animation;
 import android.view.animation.Animation.AnimationListener;
@@ -64,6 +65,7 @@ public class TimelineActivity extends Activity implements OnClickListener {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.main);
         mListView = (ListView) findViewById(R.id.tweetListView);
         mMenu = (LinearLayout) findViewById(R.id.menu);
