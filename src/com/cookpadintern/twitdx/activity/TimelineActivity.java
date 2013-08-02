@@ -23,6 +23,8 @@ import com.cookpadintern.twitdx.R;
 import com.cookpadintern.twitdx.common.*;
 import com.cookpad.intern.twitdx.customize.*;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
@@ -35,6 +37,7 @@ import android.view.animation.Animation;
 import android.view.animation.Animation.AnimationListener;
 import android.view.animation.TranslateAnimation;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ImageButton;
@@ -51,6 +54,7 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
     private LinearLayout.LayoutParams mContentParams;
     private TranslateAnimation mSlide;
     private ImageButton mMenuBtn;
+    private ImageButton mPostBtn;
     private Button mTimelineBtn;
     private Button mMentionBtn;
     private Button mLogoutBtn;
@@ -76,11 +80,13 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
         mMentionBtn = (Button) findViewById(R.id.btn_mention);
         mAboutBtn = (Button) findViewById(R.id.btn_about);
         mLogoutBtn = (Button) findViewById(R.id.btn_logout);
+        mPostBtn = (ImageButton) findViewById(R.id.tweet_button);
+        
         mCurrentScreenId = R.id.btn_timeline;
 
         mMenuWidth = mMenu.getLayoutParams().width;
         mContentParams = (LinearLayout.LayoutParams) mContent.getLayoutParams();
-        mContentParams.width = this.getResources().getDisplayMetrics().widthPixels; // getWindowManager().getDefaultDisplay().getWidth();
+        mContentParams.width = this.getResources().getDisplayMetrics().widthPixels;
         mContentParams.leftMargin = -mMenuWidth;
         mContent.setLayoutParams(mContentParams);
         // find and set listener for btn_menu
@@ -91,7 +97,8 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
         mMentionBtn.setOnClickListener(this);
         mAboutBtn.setOnClickListener(this);
         mLogoutBtn.setOnClickListener(this);
-
+        mPostBtn.setOnClickListener(this);
+        
         mSharedPreferences = getSharedPreferences(Const.PREFERENCE_NAME, MODE_PRIVATE);
         if (!isOnline()) {
             startActivity(new Intent(TimelineActivity.this, LoginActivity.class));
@@ -139,6 +146,9 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
     public void onClick(View v) {
         Button c = (Button) findViewById(mCurrentScreenId);
         switch (v.getId()) {
+        case R.id.tweet_button:
+            openTweetDialog();
+            return;
         case R.id.btn_about:
             c.setTextColor(Color.parseColor(getString(R.string.BtnTextNormalColor)));
             mAboutBtn.setTextColor(Color.parseColor(getString(R.string.BtnTextPressedColor)));
@@ -179,6 +189,31 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
         slideMenuIn(animateFromX, animateToX, marginX);
     }
     
+    private void openTweetDialog() {
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+
+        alert.setTitle("Title");
+        alert.setMessage("Message");
+
+        // Set an EditText view to get user input
+        final EditText input = new EditText(this);
+        alert.setView(input);
+
+        alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+            }
+        });
+
+        alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                return;
+            }
+        });
+
+        alert.show();
+
+    }
+
     private void slideMenuIn(int animateFromX, int animateToX, final int marginX) {
         mSlide = new TranslateAnimation(animateFromX, animateToX, 0, 0);
         mSlide.setDuration(200);
