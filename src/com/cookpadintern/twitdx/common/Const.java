@@ -21,4 +21,9 @@ public class Const {
     public static final String LOGGED_IN = "logged_in";
     
     public static final int LOGIN_REQUEST = 1234;
+    
+    public static final String KEY_AVATAR = "avatar"; // parent node
+    public static final String KEY_UNAME = "uname";
+    public static final String KEY_TWEET = "tweet";
+    public static final String KEY_DATE = "date";    
 }

@@ -1,8 +1,8 @@
 package com.cookpadintern.twitdx.activity;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import twitter4j.DirectMessage;
 import twitter4j.StallWarning;
@@ -17,10 +17,12 @@ import twitter4j.conf.Configuration;
 import twitter4j.conf.ConfigurationBuilder;
 import twitter4j.*;
 
+import com.cookpad.intern.twitdx.customize.MainApplication;
+import com.cookpad.intern.twitdx.customize.TweetListviewAdapter;
 import com.cookpadintern.twitdx.R;
-import com.cookpadintern.twitdx.common.Const;
+import com.cookpadintern.twitdx.common.*;
+import com.cookpad.intern.twitdx.customize.*;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
@@ -32,21 +34,18 @@ import android.view.View.OnClickListener;
 import android.view.animation.Animation;
 import android.view.animation.Animation.AnimationListener;
 import android.view.animation.TranslateAnimation;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.TextView;
-import android.widget.ScrollView;
 import android.widget.ImageButton;
 
-public class TimelineActivity extends Activity implements OnClickListener {
+public class TimelineActivity extends BaseActivity implements OnClickListener {
+    protected MainApplication mMainApp;
+    
     private static SharedPreferences mSharedPreferences;
     private static TwitterStream mTwitterStream;
     private static Twitter mTwitter;
 
-    private ScrollView mScrollView;
-    private TextView mTextView;
     private LinearLayout mMenu;
     private LinearLayout mContent;
     private LinearLayout.LayoutParams mContentParams;
@@ -57,7 +56,10 @@ public class TimelineActivity extends Activity implements OnClickListener {
     private Button mLogoutBtn;
     private Button mAboutBtn;
     private ListView mListView;
-
+    
+    private ArrayList<HashMap<String, String>> mTweets;
+    private TweetListviewAdapter mTweetAdapter; 
+    
     private int mMenuWidth = 0;
     private int mCurrentScreenId;
 
@@ -176,7 +178,7 @@ public class TimelineActivity extends Activity implements OnClickListener {
         }
         slideMenuIn(animateFromX, animateToX, marginX);
     }
-
+    
     private void slideMenuIn(int animateFromX, int animateToX, final int marginX) {
         mSlide = new TranslateAnimation(animateFromX, animateToX, 0, 0);
         mSlide.setDuration(200);
@@ -201,15 +203,21 @@ public class TimelineActivity extends Activity implements OnClickListener {
     }
 
     private void setTimelineToView(List<Status> statuses) {
-        ArrayList<String> list = new ArrayList<String>();
+        mTweets = new ArrayList<HashMap<String, String>>();
+
         for (Status status : statuses) {
-            final String tweet = "@" + status.getUser().getScreenName() + " : " + status.getText()
-                    + "\n";
-            list.add(tweet);
+            HashMap<String, String> map = new HashMap<String, String>();
+
+            map.put(Const.KEY_UNAME, status.getUser().getScreenName());
+            map.put(Const.KEY_TWEET, status.getText());
+            map.put(Const.KEY_DATE, status.getCreatedAt().toString());
+            map.put(Const.KEY_AVATAR, status.getUser().getProfileImageURL());
+            
+            mTweets.add(map);
         }
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
-                android.R.layout.simple_list_item_1, list);
-        mListView.setAdapter(adapter);
+        
+        mTweetAdapter = new TweetListviewAdapter(this, mTweets);   
+        mListView.setAdapter(mTweetAdapter);
     }
 
     private void logOut() {
@@ -222,16 +230,17 @@ public class TimelineActivity extends Activity implements OnClickListener {
     public void startStreamingTimeline() {
         UserStreamListener listener = new UserStreamListener() {
             @Override
-            public void onStatus(Status status) {
-                final String tweet = "@" + status.getUser().getScreenName() + " : "
-                        + status.getText() + "\n";
-                mTextView.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        mTextView.append(tweet);
-                        mScrollView.fullScroll(View.FOCUS_DOWN);
-                    }
-                });
+            public void onStatus(final Status status) {
+                //there are odd behaviours if add dynamically to list
+//                HashMap<String, String> map = new HashMap<String, String>();
+//
+//                map.put(Const.KEY_UNAME, status.getUser().getScreenName());
+//                map.put(Const.KEY_TWEET, status.getText());
+//                map.put(Const.KEY_DATE, status.getCreatedAt().toString());
+//                map.put(Const.KEY_AVATAR, status.getUser().getProfileImageURL());
+//                
+//                mTweets.add(0, map);
+//                mTweetAdapter.notifyDataSetChanged();
             }
 
             @Override
