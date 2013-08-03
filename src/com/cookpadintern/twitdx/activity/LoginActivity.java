@@ -114,11 +114,10 @@ public class LoginActivity extends BaseActivity implements OnClickListener {
             }
             return null;
         }
-
+         
         protected void onPostExecute(Void result) {
             Activity currentActivity = ((MainApplication) getApplicationContext())
                     .getCurrentActivity();
-            Toast.makeText(currentActivity, "Please authorize this app!", Toast.LENGTH_LONG).show();
             currentActivity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(mRequestToken
                     .getAuthenticationURL())));
         }

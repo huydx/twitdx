@@ -24,6 +24,7 @@ import com.cookpad.intern.twitdx.customize.*;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -435,6 +436,8 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
      * ************************* Background stuffs *************************
      */
     private class FetchMentionTask extends AsyncTask<Void, Void, Void> {
+        ProgressDialog progressDialog;
+
         @Override
         protected Void doInBackground(Void... params) {
             if (mMentions == null) {
@@ -453,6 +456,11 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
             }
             return null;
         }
+        
+        protected void onPreExecute() {
+            progressDialog = ProgressDialog.show(TimelineActivity.this, "", "Loading Mention...");
+            return;
+        }
 
         protected void onPostExecute(Void result) {
             Activity currentActivity = ((MainApplication) getApplicationContext())
@@ -460,11 +468,14 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
             mMentionAdapter = new TweetListviewAdapter(currentActivity, mMentions);
             mListView.setAdapter(mMentionAdapter);
             mMentionAdapter.notifyDataSetChanged();
+            progressDialog.dismiss();
         }
     }
     
     
     private class FetchTimelineTask extends AsyncTask<Void, Void, Void> {
+        ProgressDialog progressDialog;
+
         @Override
         protected Void doInBackground(Void... params) {
             List<twitter4j.Status> statuses;
@@ -482,12 +493,18 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
             return null;
         }
 
+        protected void onPreExecute() {
+            progressDialog = ProgressDialog.show(TimelineActivity.this, "", "Loading Timeline...");
+            return;
+        }
+        
         protected void onPostExecute(Void result) {
             Activity currentActivity = ((MainApplication) getApplicationContext())
                     .getCurrentActivity();
             mTweetAdapter = new TweetListviewAdapter(currentActivity, mTweets);
             mListView.setAdapter(mTweetAdapter);
             mTweetAdapter.notifyDataSetChanged();
+            progressDialog.dismiss();
         }
     }
     
