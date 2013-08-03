@@ -225,14 +225,8 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
         alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
                 String status = input.getText().toString();
-                try {
-                    mTwitter.updateStatus(status);
-                } catch (TwitterException e) {
-                    Activity currentActivity = ((MainApplication) getApplicationContext())
-                            .getCurrentActivity();
-                    Toast.makeText(currentActivity, Const.UPDATE_STATUS_ERROR, Toast.LENGTH_SHORT)
-                            .show();
-                }
+                UpdateStatusTask updateTask = new UpdateStatusTask();
+                updateTask.execute(status);
             }
         });
 
@@ -494,6 +488,29 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
             mTweetAdapter = new TweetListviewAdapter(currentActivity, mTweets);
             mListView.setAdapter(mTweetAdapter);
             mTweetAdapter.notifyDataSetChanged();
+        }
+    }
+    
+    private class UpdateStatusTask extends AsyncTask<String, Void, Void> {
+        @Override
+        protected Void doInBackground(String... params) {
+            String status = params[0];
+            try {
+                mTwitter.updateStatus(status);
+            } catch (TwitterException e) {
+                Activity currentActivity = ((MainApplication) getApplicationContext())
+                        .getCurrentActivity();
+                Toast.makeText(currentActivity, Const.UPDATE_STATUS_ERROR, Toast.LENGTH_SHORT)
+                        .show();
+            }
+            return null;
+        }
+
+        protected void onPostExecute(Void result) {
+            Activity currentActivity = ((MainApplication) getApplicationContext())
+                    .getCurrentActivity();
+            Toast.makeText(currentActivity, Const.UPDATE_STATUS_SUCCESS, Toast.LENGTH_SHORT)
+                    .show();
         }
     }
 }

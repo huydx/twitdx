@@ -28,5 +28,6 @@ public class Const {
     public static final String KEY_DATE = "date";    
     
     public static final String UPDATE_STATUS_ERROR = "some error occurred when update status";
+    public static final String UPDATE_STATUS_SUCCESS = "update status success";
     public static final int MENTION_PER_PAGE = 30;
 }
