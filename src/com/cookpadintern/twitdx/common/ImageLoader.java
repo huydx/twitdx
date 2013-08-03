@@ -143,7 +143,7 @@ public class ImageLoader {
     class PhotosLoader implements Runnable {
         PhotoToLoad photoToLoad;
         PhotosLoader(PhotoToLoad photoToLoad){
-            this.photoToLoad=photoToLoad;
+            this.photoToLoad = photoToLoad;
         }
         
         @Override
@@ -152,12 +152,12 @@ public class ImageLoader {
                 return;
             }
             
-            Bitmap bmp=getBitmap(photoToLoad.url);
+            Bitmap bmp = getBitmap(photoToLoad.url);
             memoryCache.put(photoToLoad.url, bmp);
             if(imageViewReused(photoToLoad))
                 return;
-            BitmapDisplayer bd=new BitmapDisplayer(bmp, photoToLoad);
-            Activity a=(Activity)photoToLoad.imageView.getContext();
+            BitmapDisplayer bd = new BitmapDisplayer(bmp, photoToLoad);
+            Activity a = (Activity)photoToLoad.imageView.getContext();
             a.runOnUiThread(bd);
         }
     }

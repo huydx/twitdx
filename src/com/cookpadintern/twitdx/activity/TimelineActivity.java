@@ -10,7 +10,6 @@ import twitter4j.Status;
 import twitter4j.StatusDeletionNotice;
 import twitter4j.TwitterException;
 import twitter4j.TwitterStream;
-import twitter4j.TwitterStreamFactory;
 import twitter4j.User;
 import twitter4j.UserList;
 import twitter4j.conf.Configuration;
@@ -30,6 +29,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.graphics.Color;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
 import android.view.Window;
@@ -74,7 +74,11 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
     private int mMenuWidth = 0;
     private int mCurrentScreenId;
 
-    /** Called when the activity is first created. */
+    /**
+     * ************************* 
+     * Activity default override methods
+     * *************************
+     */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -163,15 +167,18 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
             mTimelineBtn.setTextColor(Color.parseColor(getString(R.string.BtnTextPressedColor)));
             mCurrentScreenId = v.getId();
             // refresh time line
-            break;
+            slideMenuAnimate();
+            setTimelineToView();
+            return;
 
         case R.id.btn_mention:
             c.setTextColor(Color.parseColor(getString(R.string.BtnTextNormalColor)));
             mMentionBtn.setTextColor(Color.parseColor(getString(R.string.BtnTextPressedColor)));
             mCurrentScreenId = v.getId();
+            slideMenuAnimate();
             setMentionListview();
             // go to mention screen
-            break;
+            return;
 
         case R.id.btn_logout:
             c.setTextColor(Color.parseColor(getString(R.string.BtnTextNormalColor)));
@@ -179,8 +186,18 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
             mCurrentScreenId = mTimelineBtn.getId();
             logOut();
             break;
-
+        default:
+            slideMenuAnimate();
+            break;
         }
+    }
+
+    /**
+     * ************************* 
+     * Private utilities methods
+     * *************************
+     */
+    private void slideMenuAnimate() {
         int marginX, animateFromX, animateToX = 0;
         // menu is hidden
         if (mContentParams.leftMargin == -mMenuWidth) {
@@ -193,27 +210,6 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
             marginX = -mMenuWidth;
         }
         slideMenuIn(animateFromX, animateToX, marginX);
-    }
-
-    private void setMentionListview() {
-        if (mMentions == null) {
-            mMentions = new ArrayList<HashMap<String, String>>();
-        }
-
-        try {
-            List<Status> mentions;
-            mentions = mTwitter.getMentionsTimeline();
-            for (Status status : mentions) {
-                HashMap<String, String> map = makeStatusMap(status);
-                mMentions.add(map);
-            }
-            mMentionAdapter = new TweetListviewAdapter(this, mMentions);
-            mListView.setAdapter(mMentionAdapter);
-            mMentionAdapter.notifyDataSetChanged();
-        } catch (TwitterException e) {
-            e.printStackTrace();
-        }
-
     }
 
     private void openTweetDialog() {
@@ -236,7 +232,6 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
                             .getCurrentActivity();
                     Toast.makeText(currentActivity, Const.UPDATE_STATUS_ERROR, Toast.LENGTH_SHORT)
                             .show();
-
                 }
             }
         });
@@ -248,7 +243,6 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
         });
 
         alert.show();
-
     }
 
     private void slideMenuIn(int animateFromX, int animateToX, final int marginX) {
@@ -274,24 +268,6 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
         return mSharedPreferences.getString(Const.PREF_KEY_TOKEN, null) != null;
     }
 
-    private void setTimelineToView() {
-        List<Status> statuses;
-        try {
-            statuses = mTwitter.getHomeTimeline();
-            mTweets = new ArrayList<HashMap<String, String>>();
-
-            for (Status status : statuses) {
-                HashMap<String, String> map = makeStatusMap(status);
-                mTweets.add(map);
-            }
-
-            mTweetAdapter = new TweetListviewAdapter(this, mTweets);
-            mListView.setAdapter(mTweetAdapter);
-        } catch (TwitterException e) {
-            e.printStackTrace();
-        }
-    }
-
     private void logOut() {
         Editor e = mSharedPreferences.edit();
         e.clear();
@@ -299,7 +275,7 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
         startActivity(new Intent(TimelineActivity.this, LoginActivity.class));
     }
 
-    public HashMap<String, String> makeStatusMap(Status status) {
+    private HashMap<String, String> makeStatusMap(Status status) {
         HashMap<String, String> map = new HashMap<String, String>();
 
         map.put(Const.KEY_UNAME, status.getUser().getScreenName());
@@ -308,6 +284,21 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
         map.put(Const.KEY_AVATAR, status.getUser().getProfileImageURL());
 
         return map;
+    }
+
+    /**
+     * ************************* 
+     * Twitter API wrapper methods
+     * *************************
+     */
+    private void setTimelineToView() {
+        FetchTimelineTask task = new FetchTimelineTask();
+        task.execute();
+    }
+
+    private void setMentionListview() {
+        FetchMentionTask task = new FetchMentionTask();
+        task.execute();
     }
 
     public void startStreamingTimeline() {
@@ -444,5 +435,65 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
         };
         mTwitterStream.addListener(listener);
         mTwitterStream.user();
+    }
+
+    /**
+     * ************************* Background stuffs *************************
+     */
+    private class FetchMentionTask extends AsyncTask<Void, Void, Void> {
+        @Override
+        protected Void doInBackground(Void... params) {
+            if (mMentions == null) {
+                mMentions = new ArrayList<HashMap<String, String>>();
+            }
+
+            try {
+                List<twitter4j.Status> mentions;
+                mentions = mTwitter.getMentionsTimeline();
+                for (twitter4j.Status status : mentions) {
+                    HashMap<String, String> map = makeStatusMap(status);
+                    mMentions.add(map);
+                }
+            } catch (TwitterException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        protected void onPostExecute(Void result) {
+            Activity currentActivity = ((MainApplication) getApplicationContext())
+                    .getCurrentActivity();
+            mMentionAdapter = new TweetListviewAdapter(currentActivity, mMentions);
+            mListView.setAdapter(mMentionAdapter);
+            mMentionAdapter.notifyDataSetChanged();
+        }
+    }
+    
+    
+    private class FetchTimelineTask extends AsyncTask<Void, Void, Void> {
+        @Override
+        protected Void doInBackground(Void... params) {
+            List<twitter4j.Status> statuses;
+            try {
+                statuses = mTwitter.getHomeTimeline();
+                mTweets = new ArrayList<HashMap<String, String>>();
+
+                for (twitter4j.Status status : statuses) {
+                    HashMap<String, String> map = makeStatusMap(status);
+                    mTweets.add(map);
+                }
+            } catch (TwitterException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        protected void onPostExecute(Void result) {
+            Activity currentActivity = ((MainApplication) getApplicationContext())
+                    .getCurrentActivity();
+            mTweetAdapter = new TweetListviewAdapter(currentActivity, mTweets);
+            mListView.setAdapter(mTweetAdapter);
+            mTweetAdapter.notifyDataSetChanged();
+        }
     }
 }
