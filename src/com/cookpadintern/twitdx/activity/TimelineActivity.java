@@ -1,8 +1,10 @@
 package com.cookpadintern.twitdx.activity;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 
 import twitter4j.DirectMessage;
 import twitter4j.StallWarning;
@@ -280,7 +282,9 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
 
         map.put(Const.KEY_UNAME, status.getUser().getScreenName());
         map.put(Const.KEY_TWEET, status.getText());
-        map.put(Const.KEY_DATE, status.getCreatedAt().toString());
+        String format = "MM-dd HH:mm";
+        SimpleDateFormat sdf = new SimpleDateFormat(format, Locale.JAPAN);
+        map.put(Const.KEY_DATE, sdf.format(status.getCreatedAt()));
         map.put(Const.KEY_AVATAR, status.getUser().getProfileImageURL());
 
         return map;
