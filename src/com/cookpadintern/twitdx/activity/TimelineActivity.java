@@ -128,7 +128,10 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
 
             // first fetch current timeline
             mTwitter = new TwitterFactory(conf).getInstance();
+            mTwitterStream = new TwitterStreamFactory(conf).getInstance();
+            
             setTimelineToView();
+            startStreamingTimeline();
         }
     }
 
@@ -152,8 +155,10 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
             return;
 
         case R.id.refresh_button:
-            mTweetAdapter.notifyDataSetChanged();
-            mListView.invalidateViews();
+            if (mCurrentScreenId == R.id.btn_timeline) { //at timeline screen
+                mTweetAdapter.notifyDataSetChanged();
+                mListView.invalidateViews();
+            }
             return;
 
         case R.id.btn_about:
@@ -167,9 +172,9 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
             c.setTextColor(Color.parseColor(getString(R.string.BtnTextNormalColor)));
             mTimelineBtn.setTextColor(Color.parseColor(getString(R.string.BtnTextPressedColor)));
             mCurrentScreenId = v.getId();
-            // refresh time line
             slideMenuAnimate();
             setTimelineToView();
+            mRefreshButton.setVisibility(View.VISIBLE);
             return;
 
         case R.id.btn_mention:
@@ -178,7 +183,7 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
             mCurrentScreenId = v.getId();
             slideMenuAnimate();
             setMentionListview();
-            // go to mention screen
+            mRefreshButton.setVisibility(View.GONE);
             return;
 
         case R.id.btn_logout:
@@ -428,6 +433,9 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
 
             }
         };
+        if (mTwitterStream == null) {
+            return;
+        }
         mTwitterStream.addListener(listener);
         mTwitterStream.user();
     }

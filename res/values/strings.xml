@@ -9,4 +9,5 @@
     <string name="timeline">Timeline</string>
     <string name="BtnTextNormalColor">#ffffff</string>
     <string name="BtnTextPressedColor">#1abc9c</string>
+    <string name="avatar">avatar</string>
 </resources>

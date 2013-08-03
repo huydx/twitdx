@@ -21,7 +21,7 @@
             android:gravity="left|center_vertical"
             android:text="@string/timeline"
             android:textColor="#1abc9c"
-            android:textSize="18dip" />
+            android:textSize="18sp" />
 
         <TextView
             android:layout_width="match_parent"
@@ -36,7 +36,7 @@
             android:gravity="left|center_vertical"
             android:text="@string/mention"
             android:textColor="#FFFFFF"
-            android:textSize="18dip" />
+            android:textSize="18sp" />
 
         <TextView
             android:layout_width="match_parent"
@@ -52,7 +52,7 @@
             android:gravity="left|center_vertical"
             android:text="@string/about"
             android:textColor="#FFFFFF"
-            android:textSize="18dip" />
+            android:textSize="18sp" />
 
         <TextView
             android:layout_width="match_parent"
@@ -68,7 +68,7 @@
             android:gravity="left|center_vertical"
             android:text="@string/logout"
             android:textColor="#FFFFFF"
-            android:textSize="18dip" />
+            android:textSize="18sp" />
 
         <TextView
             android:layout_width="match_parent"
@@ -105,6 +105,7 @@
                 android:layout_width="50dip"
                 android:layout_height="50dip"
                 android:src="@drawable/refresh"
+                android:contentDescription="@string/app_name"
                 />
             
             <ImageButton
@@ -114,6 +115,7 @@
                 android:layout_width="50dip"
                 android:layout_height="50dip"
                 android:src="@drawable/post"
+                android:contentDescription="@string/app_name"
                 />
         </LinearLayout>
 
