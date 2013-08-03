@@ -26,4 +26,7 @@ public class Const {
     public static final String KEY_UNAME = "uname";
     public static final String KEY_TWEET = "tweet";
     public static final String KEY_DATE = "date";    
+    
+    public static final String UPDATE_STATUS_ERROR = "some error occurred when update status";
+    public static final int MENTION_PER_PAGE = 30;
 }

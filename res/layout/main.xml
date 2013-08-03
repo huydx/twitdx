@@ -97,15 +97,23 @@
                 android:background="@android:color/transparent"
                 android:contentDescription="@string/app_name"
                 android:src="@drawable/option" />
-
+			
             <ImageButton
-                android:id="@+id/tweet_button"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginLeft="100dip"
-                android:gravity="center"
+                android:id="@+id/refresh_button"
+                android:layout_marginLeft="40dip"
+                android:background="@android:color/transparent"
                 android:layout_width="50dip"
                 android:layout_height="50dip"
-                android:src="@drawable/option"
+                android:src="@drawable/refresh"
+                />
+            
+            <ImageButton
+                android:id="@+id/tweet_button"
+                android:layout_marginLeft="70dip"
+                android:background="@android:color/transparent"
+                android:layout_width="50dip"
+                android:layout_height="50dip"
+                android:src="@drawable/post"
                 />
         </LinearLayout>
 
