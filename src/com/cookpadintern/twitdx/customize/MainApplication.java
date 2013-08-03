@@ -1,4 +1,4 @@
-package com.cookpad.intern.twitdx.customize;
+package com.cookpadintern.twitdx.customize;
 /*
 author:huydx
 github:https://github.com/huydx

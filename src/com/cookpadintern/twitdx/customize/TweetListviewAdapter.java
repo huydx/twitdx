@@ -1,4 +1,4 @@
-package com.cookpad.intern.twitdx.customize;
+package com.cookpadintern.twitdx.customize;
 
 import com.cookpadintern.twitdx.R;
 import com.cookpadintern.twitdx.common.*;

@@ -18,11 +18,9 @@ import twitter4j.conf.Configuration;
 import twitter4j.conf.ConfigurationBuilder;
 import twitter4j.*;
 
-import com.cookpad.intern.twitdx.customize.MainApplication;
-import com.cookpad.intern.twitdx.customize.TweetListviewAdapter;
 import com.cookpadintern.twitdx.R;
 import com.cookpadintern.twitdx.common.*;
-import com.cookpad.intern.twitdx.customize.*;
+import com.cookpadintern.twitdx.customize.*;
 
 import android.app.Activity;
 import android.app.AlertDialog;

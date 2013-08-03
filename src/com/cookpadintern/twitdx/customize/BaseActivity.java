@@ -2,7 +2,7 @@
 author:huydx
 github:https://github.com/huydx
 */
-package com.cookpad.intern.twitdx.customize;
+package com.cookpadintern.twitdx.customize;
 
 import android.app.Activity;
 import android.os.Bundle;

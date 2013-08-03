@@ -1,9 +1,9 @@
 package com.cookpadintern.twitdx.activity;
 
-import com.cookpad.intern.twitdx.customize.BaseActivity;
-import com.cookpad.intern.twitdx.customize.MainApplication;
 import com.cookpadintern.twitdx.R;
 import com.cookpadintern.twitdx.common.*;
+import com.cookpadintern.twitdx.customize.BaseActivity;
+import com.cookpadintern.twitdx.customize.MainApplication;
 
 import android.app.Activity;
 import android.content.Intent;
