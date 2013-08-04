@@ -82,17 +82,18 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
      */
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        this.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        setContentView(R.layout.main);
-        mListView = (ListView) findViewById(R.id.tweetListView);
-        mMenu = (LinearLayout) findViewById(R.id.menu);
-        mContent = (LinearLayout) findViewById(R.id.content);
-        mTimelineBtn = (Button) findViewById(R.id.btn_timeline);
-        mMentionBtn = (Button) findViewById(R.id.btn_mention);
-        mAboutBtn = (Button) findViewById(R.id.btn_about);
-        mLogoutBtn = (Button) findViewById(R.id.btn_logout);
-        mPostBtn = (ImageButton) findViewById(R.id.tweet_button);
+		super.onCreate(savedInstanceState);
+		this.requestWindowFeature(Window.FEATURE_NO_TITLE);
+		setContentView(R.layout.main);		
+
+		mListView = (ListView) findViewById(R.id.tweetListView);
+		mMenu = (LinearLayout) findViewById(R.id.menu);
+		mContent = (LinearLayout) findViewById(R.id.content);
+		mTimelineBtn = (Button) findViewById(R.id.btn_timeline);
+		mMentionBtn = (Button) findViewById(R.id.btn_mention);
+		mAboutBtn = (Button) findViewById(R.id.btn_about);
+		mLogoutBtn = (Button) findViewById(R.id.btn_logout);
+		mPostBtn = (ImageButton) findViewById(R.id.tweet_button);
         mRefreshButton = (ImageButton) findViewById(R.id.refresh_button);
 
         mCurrentScreenId = R.id.btn_timeline;
@@ -114,7 +115,7 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
         mRefreshButton.setOnClickListener(this);
 
         mSharedPreferences = getSharedPreferences(Const.PREFERENCE_NAME, MODE_PRIVATE);
-        if (!isOnline()) {
+        if (!isOnline() || !Utils.haveNetworkConnection(this)) {
             startActivity(new Intent(TimelineActivity.this, LoginActivity.class));
         } else {
             String oauthAccessToken = mSharedPreferences.getString(Const.PREF_KEY_TOKEN, "");

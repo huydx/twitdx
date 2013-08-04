@@ -29,5 +29,6 @@ public class Const {
     
     public static final String UPDATE_STATUS_ERROR = "some error occurred when update status";
     public static final String UPDATE_STATUS_SUCCESS = "update status success";
+    public static final String NETWORK_ERROR="network connect error, please check your network";
     public static final int MENTION_PER_PAGE = 30;
 }

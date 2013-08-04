@@ -40,9 +40,7 @@ public class LoginActivity extends BaseActivity implements OnClickListener {
         setContentView(R.layout.login);
         loginButton = (ImageButton) findViewById(R.id.btn_login);
         loginButton.setOnClickListener(this);
-        
-        //[TODO] detect Internet first
-        
+                
         mSharedPreferences = getSharedPreferences(Const.PREFERENCE_NAME, MODE_PRIVATE);
         FetchTokenTask fetchToken = new FetchTokenTask();
         fetchToken.execute();
@@ -50,6 +48,10 @@ public class LoginActivity extends BaseActivity implements OnClickListener {
 
     @Override
     public void onClick(View v) {
+    	if (!Utils.haveNetworkConnection(this)) {
+    		 Toast.makeText(this, Const.NETWORK_ERROR, Toast.LENGTH_LONG).show();
+    		return;
+    	}
         switch (v.getId()) {
         case (R.id.btn_login):
             OauthTask oauthExec = new OauthTask();
