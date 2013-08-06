@@ -1,7 +1,7 @@
 /*
 author:huydx
 github:https://github.com/huydx
-*/
+ */
 package com.cookpadintern.twitdx.customize;
 
 import android.app.Activity;

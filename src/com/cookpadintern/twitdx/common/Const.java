@@ -1,7 +1,7 @@
 /*
 author:huydx
 github:https://github.com/huydx
-*/
+ */
 package com.cookpadintern.twitdx.common;
 
 public class Const {
@@ -17,16 +17,16 @@ public class Const {
     public static final String IEXTRA_AUTH_URL = "auth_url";
     public static final String IEXTRA_OAUTH_VERIFIER = "oauth_verifier";
     public static final String IEXTRA_OAUTH_TOKEN = "oauth_token";
-    
+
     public static final String LOGGED_IN = "logged_in";
-    
+
     public static final int LOGIN_REQUEST = 1234;
-    
+
     public static final String KEY_AVATAR = "avatar"; // parent node
     public static final String KEY_UNAME = "uname";
     public static final String KEY_TWEET = "tweet";
     public static final String KEY_DATE = "date";    
-    
+
     public static final String UPDATE_STATUS_ERROR = "some error occurred when update status";
     public static final String UPDATE_STATUS_SUCCESS = "update status success";
     public static final String NETWORK_ERROR="network connect error, please check your network";

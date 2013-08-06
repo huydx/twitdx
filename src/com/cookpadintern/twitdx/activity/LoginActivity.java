@@ -27,7 +27,7 @@ public class LoginActivity extends BaseActivity implements OnClickListener {
     private static Twitter mTwitter;
     private static RequestToken mRequestToken;
     private static SharedPreferences mSharedPreferences;
-    
+
     /**
      * ************************* 
      * Activity default method
@@ -40,7 +40,7 @@ public class LoginActivity extends BaseActivity implements OnClickListener {
         setContentView(R.layout.login);
         loginButton = (ImageButton) findViewById(R.id.btn_login);
         loginButton.setOnClickListener(this);
-                
+
         mSharedPreferences = getSharedPreferences(Const.PREFERENCE_NAME, MODE_PRIVATE);
         FetchTokenTask fetchToken = new FetchTokenTask();
         fetchToken.execute();
@@ -48,22 +48,20 @@ public class LoginActivity extends BaseActivity implements OnClickListener {
 
     @Override
     public void onClick(View v) {
-    	if (!Utils.haveNetworkConnection(this)) {
-    		 Toast.makeText(this, Const.NETWORK_ERROR, Toast.LENGTH_LONG).show();
-    		return;
-    	}
-        switch (v.getId()) {
-        case (R.id.btn_login):
-            OauthTask oauthExec = new OauthTask();
-            oauthExec.execute();
-            break;
-        default:
-            break;
+        if (!Utils.haveNetworkConnection(this)) {
+            Toast.makeText(this, Const.NETWORK_ERROR, Toast.LENGTH_LONG).show();
+            return;
         }
-
+        switch (v.getId()) {
+            case (R.id.btn_login):
+                OauthTask oauthExec = new OauthTask();
+                oauthExec.execute();
+                break;
+            default:
+                break;
+        }
     }
-    
-    
+
     /**
      * ************************* 
      * Background stuffs
@@ -73,7 +71,7 @@ public class LoginActivity extends BaseActivity implements OnClickListener {
         @Override
         protected Void doInBackground(Void... params) {
             mSharedPreferences = getSharedPreferences(Const.PREFERENCE_NAME, MODE_PRIVATE);
-            
+
             // handle oAuth callback
             Uri uri = getIntent().getData();
             if (uri != null && uri.toString().startsWith(Const.CALLBACK_URL)) {
@@ -96,10 +94,10 @@ public class LoginActivity extends BaseActivity implements OnClickListener {
         }
 
         protected void onPostExecute(Void result) {
-            
+
         }
     }
-    
+
     private class OauthTask extends AsyncTask<Void, Void, Void> {
         @Override
         protected Void doInBackground(Void... params) {
@@ -116,7 +114,7 @@ public class LoginActivity extends BaseActivity implements OnClickListener {
             }
             return null;
         }
-         
+
         protected void onPostExecute(Void result) {
             Activity currentActivity = ((MainApplication) getApplicationContext())
                     .getCurrentActivity();

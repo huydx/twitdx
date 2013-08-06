@@ -82,18 +82,18 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
      */
     @Override
     public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		this.requestWindowFeature(Window.FEATURE_NO_TITLE);
-		setContentView(R.layout.main);		
+        super.onCreate(savedInstanceState);
+        this.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        setContentView(R.layout.main);		
 
-		mListView = (ListView) findViewById(R.id.tweetListView);
-		mMenu = (LinearLayout) findViewById(R.id.menu);
-		mContent = (LinearLayout) findViewById(R.id.content);
-		mTimelineBtn = (Button) findViewById(R.id.btn_timeline);
-		mMentionBtn = (Button) findViewById(R.id.btn_mention);
-		mAboutBtn = (Button) findViewById(R.id.btn_about);
-		mLogoutBtn = (Button) findViewById(R.id.btn_logout);
-		mPostBtn = (ImageButton) findViewById(R.id.tweet_button);
+        mListView = (ListView) findViewById(R.id.tweetListView);
+        mMenu = (LinearLayout) findViewById(R.id.menu);
+        mContent = (LinearLayout) findViewById(R.id.content);
+        mTimelineBtn = (Button) findViewById(R.id.btn_timeline);
+        mMentionBtn = (Button) findViewById(R.id.btn_mention);
+        mAboutBtn = (Button) findViewById(R.id.btn_about);
+        mLogoutBtn = (Button) findViewById(R.id.btn_logout);
+        mPostBtn = (ImageButton) findViewById(R.id.tweet_button);
         mRefreshButton = (ImageButton) findViewById(R.id.refresh_button);
 
         mCurrentScreenId = R.id.btn_timeline;
@@ -130,7 +130,7 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
             // first fetch current timeline
             mTwitter = new TwitterFactory(conf).getInstance();
             mTwitterStream = new TwitterStreamFactory(conf).getInstance();
-            
+
             setTimelineToView();
             startStreamingTimeline();
         }
@@ -140,10 +140,10 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         switch (requestCode) {
-        case Const.LOGIN_REQUEST:
-            break;
-        default:
-            break;
+            case Const.LOGIN_REQUEST:
+                break;
+            default:
+                break;
         }
     }
 
@@ -151,51 +151,51 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
     public void onClick(View v) {
         Button c = (Button) findViewById(mCurrentScreenId);
         switch (v.getId()) {
-        case R.id.tweet_button:
-            openTweetDialog();
-            return;
+            case R.id.tweet_button:
+                openTweetDialog();
+                return;
 
-        case R.id.refresh_button:
-            if (mCurrentScreenId == R.id.btn_timeline) { //at timeline screen
-                mTweetAdapter.notifyDataSetChanged();
-                mListView.invalidateViews();
-            }
-            return;
+            case R.id.refresh_button:
+                if (mCurrentScreenId == R.id.btn_timeline) { //at timeline screen
+                    mTweetAdapter.notifyDataSetChanged();
+                    mListView.invalidateViews();
+                }
+                return;
 
-        case R.id.btn_about:
-            c.setTextColor(Color.parseColor(getString(R.string.BtnTextNormalColor)));
-            mAboutBtn.setTextColor(Color.parseColor(getString(R.string.BtnTextPressedColor)));
-            mCurrentScreenId = v.getId();
-            // go to about
-            break;
+            case R.id.btn_about:
+                c.setTextColor(Color.parseColor(getString(R.string.BtnTextNormalColor)));
+                mAboutBtn.setTextColor(Color.parseColor(getString(R.string.BtnTextPressedColor)));
+                mCurrentScreenId = v.getId();
+                // go to about
+                break;
 
-        case R.id.btn_timeline:
-            c.setTextColor(Color.parseColor(getString(R.string.BtnTextNormalColor)));
-            mTimelineBtn.setTextColor(Color.parseColor(getString(R.string.BtnTextPressedColor)));
-            mCurrentScreenId = v.getId();
-            slideMenuAnimate();
-            setTimelineToView();
-            mRefreshButton.setVisibility(View.VISIBLE);
-            return;
+            case R.id.btn_timeline:
+                c.setTextColor(Color.parseColor(getString(R.string.BtnTextNormalColor)));
+                mTimelineBtn.setTextColor(Color.parseColor(getString(R.string.BtnTextPressedColor)));
+                mCurrentScreenId = v.getId();
+                slideMenuAnimate();
+                setTimelineToView();
+                mRefreshButton.setVisibility(View.VISIBLE);
+                return;
 
-        case R.id.btn_mention:
-            c.setTextColor(Color.parseColor(getString(R.string.BtnTextNormalColor)));
-            mMentionBtn.setTextColor(Color.parseColor(getString(R.string.BtnTextPressedColor)));
-            mCurrentScreenId = v.getId();
-            slideMenuAnimate();
-            setMentionListview();
-            mRefreshButton.setVisibility(View.GONE);
-            return;
+            case R.id.btn_mention:
+                c.setTextColor(Color.parseColor(getString(R.string.BtnTextNormalColor)));
+                mMentionBtn.setTextColor(Color.parseColor(getString(R.string.BtnTextPressedColor)));
+                mCurrentScreenId = v.getId();
+                slideMenuAnimate();
+                setMentionListview();
+                mRefreshButton.setVisibility(View.GONE);
+                return;
 
-        case R.id.btn_logout:
-            c.setTextColor(Color.parseColor(getString(R.string.BtnTextNormalColor)));
-            mLogoutBtn.setTextColor(Color.parseColor(getString(R.string.BtnTextPressedColor)));
-            mCurrentScreenId = mTimelineBtn.getId();
-            logOut();
-            break;
-        default:
-            slideMenuAnimate();
-            break;
+            case R.id.btn_logout:
+                c.setTextColor(Color.parseColor(getString(R.string.BtnTextNormalColor)));
+                mLogoutBtn.setTextColor(Color.parseColor(getString(R.string.BtnTextPressedColor)));
+                mCurrentScreenId = mTimelineBtn.getId();
+                logOut();
+                break;
+            default:
+                slideMenuAnimate();
+                break;
         }
     }
 
@@ -467,7 +467,7 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
             }
             return null;
         }
-        
+
         protected void onPreExecute() {
             progressDialog = ProgressDialog.show(TimelineActivity.this, "", "Loading Mention...");
             return;
@@ -482,8 +482,8 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
             progressDialog.dismiss();
         }
     }
-    
-    
+
+
     private class FetchTimelineTask extends AsyncTask<Void, Void, Void> {
         ProgressDialog progressDialog;
 
@@ -508,7 +508,7 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
             progressDialog = ProgressDialog.show(TimelineActivity.this, "", "Loading Timeline...");
             return;
         }
-        
+
         protected void onPostExecute(Void result) {
             Activity currentActivity = ((MainApplication) getApplicationContext())
                     .getCurrentActivity();
@@ -518,7 +518,7 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
             progressDialog.dismiss();
         }
     }
-    
+
     private class UpdateStatusTask extends AsyncTask<String, Void, Void> {
         @Override
         protected Void doInBackground(String... params) {
@@ -529,7 +529,7 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
                 Activity currentActivity = ((MainApplication) getApplicationContext())
                         .getCurrentActivity();
                 Toast.makeText(currentActivity, Const.UPDATE_STATUS_ERROR, Toast.LENGTH_SHORT)
-                        .show();
+                .show();
             }
             return null;
         }
@@ -538,7 +538,7 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
             Activity currentActivity = ((MainApplication) getApplicationContext())
                     .getCurrentActivity();
             Toast.makeText(currentActivity, Const.UPDATE_STATUS_SUCCESS, Toast.LENGTH_SHORT)
-                    .show();
+            .show();
         }
     }
 }
