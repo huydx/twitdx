@@ -1,12 +1,12 @@
 package com.cookpadintern.twitdx.activity;
 
-import com.cookpadintern.twitdx.R;
-
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.Window;
+
+import com.cookpadintern.twitdx.R;
 
 
 public class SplashActivity extends Activity {

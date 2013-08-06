@@ -1,7 +1,7 @@
 /*
 author:huydx
 github:https://github.com/huydx
-*/
+ */
 package com.cookpadintern.twitdx.customize;
 
 import android.app.Activity;
@@ -14,15 +14,22 @@ public class BaseActivity extends Activity {
         super.onCreate(savedInstanceState);
         mMainApp = (MainApplication)this.getApplicationContext();
     }
+
+    protected MainApplication getTwitdxApplication() {
+        return (MainApplication) getApplication();
+    }
+
     protected void onResume() {
         super.onResume();
         mMainApp.setCurrentActivity(this);
     }
+
     protected void onPause() {
         clearReferences();
         super.onPause();
     }
-    protected void onDestroy() {        
+
+    protected void onDestroy() {
         clearReferences();
         super.onDestroy();
     }

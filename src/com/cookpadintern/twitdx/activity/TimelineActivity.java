@@ -1,61 +1,51 @@
 package com.cookpadintern.twitdx.activity;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 
-import twitter4j.DirectMessage;
-import twitter4j.StallWarning;
 import twitter4j.Status;
-import twitter4j.StatusDeletionNotice;
+import twitter4j.Twitter;
 import twitter4j.TwitterException;
+import twitter4j.TwitterFactory;
 import twitter4j.TwitterStream;
-import twitter4j.User;
-import twitter4j.UserList;
+import twitter4j.TwitterStreamFactory;
+import twitter4j.UserStreamAdapter;
 import twitter4j.conf.Configuration;
-import twitter4j.conf.ConfigurationBuilder;
-import twitter4j.*;
-
-import com.cookpadintern.twitdx.R;
-import com.cookpadintern.twitdx.common.*;
-import com.cookpadintern.twitdx.customize.*;
-
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.ProgressDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.SharedPreferences.Editor;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
-import android.view.Window;
 import android.view.View.OnClickListener;
-import android.view.animation.Animation;
-import android.view.animation.Animation.AnimationListener;
-import android.view.animation.TranslateAnimation;
+import android.view.Window;
 import android.widget.Button;
-import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.ImageButton;
 import android.widget.Toast;
+
+import com.cookpadintern.twitdx.R;
+import com.cookpadintern.twitdx.activity.helper.TimelineActivityHelper;
+import com.cookpadintern.twitdx.common.Const;
+import com.cookpadintern.twitdx.common.Utils;
+import com.cookpadintern.twitdx.customize.BaseActivity;
+import com.cookpadintern.twitdx.customize.MainApplication;
+import com.cookpadintern.twitdx.customize.TweetListviewAdapter;
+import com.cookpadintern.twitdx.model.TwitterAccount;
 
 public class TimelineActivity extends BaseActivity implements OnClickListener {
     protected MainApplication mMainApp;
 
-    private static SharedPreferences mSharedPreferences;
-    private static TwitterStream mTwitterStream;
-    private static Twitter mTwitter;
+    private static TwitterStream sTwitterStream;
+    private static Twitter sTwitter;
+    private TwitterAccount mAccount;
 
     private LinearLayout mMenu;
     private LinearLayout mContent;
     private LinearLayout.LayoutParams mContentParams;
-    private TranslateAnimation mSlide;
     private ImageButton mMenuBtn;
     private ImageButton mPostBtn;
     private ImageButton mRefreshButton;
@@ -75,6 +65,8 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
     private int mMenuWidth = 0;
     private int mCurrentScreenId;
 
+    private TimelineActivityHelper mActivityHelper;
+
     /**
      * ************************* 
      * Activity default override methods
@@ -82,18 +74,25 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
      */
     @Override
     public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		this.requestWindowFeature(Window.FEATURE_NO_TITLE);
-		setContentView(R.layout.main);		
+        super.onCreate(savedInstanceState);
+        this.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        setContentView(R.layout.main);
 
-		mListView = (ListView) findViewById(R.id.tweetListView);
-		mMenu = (LinearLayout) findViewById(R.id.menu);
-		mContent = (LinearLayout) findViewById(R.id.content);
-		mTimelineBtn = (Button) findViewById(R.id.btn_timeline);
-		mMentionBtn = (Button) findViewById(R.id.btn_mention);
-		mAboutBtn = (Button) findViewById(R.id.btn_about);
-		mLogoutBtn = (Button) findViewById(R.id.btn_logout);
-		mPostBtn = (ImageButton) findViewById(R.id.tweet_button);
+        mActivityHelper = new TimelineActivityHelper(this);
+
+        initViews();
+        initActivityOrStartLogin();
+    }
+
+    private void initViews() {
+        mListView = (ListView) findViewById(R.id.tweetListView);
+        mMenu = (LinearLayout) findViewById(R.id.menu);
+        mContent = (LinearLayout) findViewById(R.id.content);
+        mTimelineBtn = (Button) findViewById(R.id.btn_timeline);
+        mMentionBtn = (Button) findViewById(R.id.btn_mention);
+        mAboutBtn = (Button) findViewById(R.id.btn_about);
+        mLogoutBtn = (Button) findViewById(R.id.btn_logout);
+        mPostBtn = (ImageButton) findViewById(R.id.tweet_button);
         mRefreshButton = (ImageButton) findViewById(R.id.refresh_button);
 
         mCurrentScreenId = R.id.btn_timeline;
@@ -113,24 +112,19 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
         mLogoutBtn.setOnClickListener(this);
         mPostBtn.setOnClickListener(this);
         mRefreshButton.setOnClickListener(this);
+    }
 
-        mSharedPreferences = getSharedPreferences(Const.PREFERENCE_NAME, MODE_PRIVATE);
-        if (!isOnline() || !Utils.haveNetworkConnection(this)) {
+    private void initActivityOrStartLogin() {
+        mAccount = getTwitdxApplication().getAccount();
+        if (mAccount.isNotOnline() || !Utils.haveNetworkConnection(this)) {
             startActivity(new Intent(TimelineActivity.this, LoginActivity.class));
         } else {
-            String oauthAccessToken = mSharedPreferences.getString(Const.PREF_KEY_TOKEN, "");
-            String oAuthAccessTokenSecret = mSharedPreferences.getString(Const.PREF_KEY_SECRET, "");
-
-            ConfigurationBuilder confbuilder = new ConfigurationBuilder();
-            Configuration conf = confbuilder.setOAuthConsumerKey(Const.CONSUMER_KEY)
-                    .setOAuthConsumerSecret(Const.CONSUMER_SECRET)
-                    .setOAuthAccessToken(oauthAccessToken)
-                    .setOAuthAccessTokenSecret(oAuthAccessTokenSecret).build();
+            Configuration conf = mAccount.buildTwitterConfiguration();
 
             // first fetch current timeline
-            mTwitter = new TwitterFactory(conf).getInstance();
-            mTwitterStream = new TwitterStreamFactory(conf).getInstance();
-            
+            sTwitter = new TwitterFactory(conf).getInstance();
+            sTwitterStream = new TwitterStreamFactory(conf).getInstance();
+
             setTimelineToView();
             startStreamingTimeline();
         }
@@ -140,153 +134,80 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         switch (requestCode) {
-        case Const.LOGIN_REQUEST:
-            break;
-        default:
-            break;
+            case Const.LOGIN_REQUEST:
+                break;
+            default:
+                break;
         }
     }
+
+    private TimelineActivityHelper.TweetDialogClickListener mTweetDialogClickListener =
+            new TimelineActivityHelper.TweetDialogClickListener() {
+        @Override
+        public void onOkClick(String tweet) {
+            UpdateStatusTask updateTask = new UpdateStatusTask();
+            updateTask.execute(tweet);
+        }
+
+        @Override
+        public void onCancelClick() {}
+    };
 
     @Override
     public void onClick(View v) {
         Button c = (Button) findViewById(mCurrentScreenId);
         switch (v.getId()) {
-        case R.id.tweet_button:
-            openTweetDialog();
-            return;
-
-        case R.id.refresh_button:
-            if (mCurrentScreenId == R.id.btn_timeline) { //at timeline screen
-                mTweetAdapter.notifyDataSetChanged();
-                mListView.invalidateViews();
-            }
-            return;
-
-        case R.id.btn_about:
-            c.setTextColor(Color.parseColor(getString(R.string.BtnTextNormalColor)));
-            mAboutBtn.setTextColor(Color.parseColor(getString(R.string.BtnTextPressedColor)));
-            mCurrentScreenId = v.getId();
-            // go to about
-            break;
-
-        case R.id.btn_timeline:
-            c.setTextColor(Color.parseColor(getString(R.string.BtnTextNormalColor)));
-            mTimelineBtn.setTextColor(Color.parseColor(getString(R.string.BtnTextPressedColor)));
-            mCurrentScreenId = v.getId();
-            slideMenuAnimate();
-            setTimelineToView();
-            mRefreshButton.setVisibility(View.VISIBLE);
-            return;
-
-        case R.id.btn_mention:
-            c.setTextColor(Color.parseColor(getString(R.string.BtnTextNormalColor)));
-            mMentionBtn.setTextColor(Color.parseColor(getString(R.string.BtnTextPressedColor)));
-            mCurrentScreenId = v.getId();
-            slideMenuAnimate();
-            setMentionListview();
-            mRefreshButton.setVisibility(View.GONE);
-            return;
-
-        case R.id.btn_logout:
-            c.setTextColor(Color.parseColor(getString(R.string.BtnTextNormalColor)));
-            mLogoutBtn.setTextColor(Color.parseColor(getString(R.string.BtnTextPressedColor)));
-            mCurrentScreenId = mTimelineBtn.getId();
-            logOut();
-            break;
-        default:
-            slideMenuAnimate();
-            break;
-        }
-    }
-
-    /**
-     * ************************* 
-     * Private utilities methods
-     * *************************
-     */
-    private void slideMenuAnimate() {
-        int marginX, animateFromX, animateToX = 0;
-        // menu is hidden
-        if (mContentParams.leftMargin == -mMenuWidth) {
-            animateFromX = 0;
-            animateToX = mMenuWidth;
-            marginX = 0;
-        } else { // menu is visible
-            animateFromX = 0;
-            animateToX = -mMenuWidth;
-            marginX = -mMenuWidth;
-        }
-        slideMenuIn(animateFromX, animateToX, marginX);
-    }
-
-    private void openTweetDialog() {
-        AlertDialog.Builder alert = new AlertDialog.Builder(this);
-
-        alert.setTitle("Twitter");
-        alert.setMessage("Update status");
-
-        // Set an EditText view to get user input
-        final EditText input = new EditText(this);
-        alert.setView(input);
-
-        alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
-                String status = input.getText().toString();
-                UpdateStatusTask updateTask = new UpdateStatusTask();
-                updateTask.execute(status);
-            }
-        });
-
-        alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
+            case R.id.tweet_button:
+                mActivityHelper.openTweetDialog(mTweetDialogClickListener);
                 return;
-            }
-        });
 
-        alert.show();
-    }
+            case R.id.refresh_button:
+                if (mCurrentScreenId == R.id.btn_timeline) { //at timeline screen
+                    mTweetAdapter.notifyDataSetChanged();
+                    mListView.invalidateViews();
+                }
+                return;
 
-    private void slideMenuIn(int animateFromX, int animateToX, final int marginX) {
-        mSlide = new TranslateAnimation(animateFromX, animateToX, 0, 0);
-        mSlide.setDuration(200);
-        mSlide.setFillEnabled(true);
-        mSlide.setAnimationListener(new AnimationListener() {
-            public void onAnimationEnd(Animation animation) {
-                mContentParams.setMargins(marginX, 0, 0, 0);
-                mContent.setLayoutParams(mContentParams);
-            }
+            case R.id.btn_about:
+                c.setTextColor(Color.parseColor(getString(R.string.BtnTextNormalColor)));
+                mAboutBtn.setTextColor(Color.parseColor(getString(R.string.BtnTextPressedColor)));
+                mCurrentScreenId = v.getId();
+                // go to about
+                break;
 
-            public void onAnimationRepeat(Animation animation) {
-            }
+            case R.id.btn_timeline:
+                c.setTextColor(Color.parseColor(getString(R.string.BtnTextNormalColor)));
+                mTimelineBtn.setTextColor(Color.parseColor(getString(R.string.BtnTextPressedColor)));
+                mCurrentScreenId = v.getId();
+                mActivityHelper.slideMenuAnimate(mContent, mMenuWidth);
+                setTimelineToView();
+                mRefreshButton.setVisibility(View.VISIBLE);
+                return;
 
-            public void onAnimationStart(Animation animation) {
-            }
-        });
-        mContent.startAnimation(mSlide);
-    }
+            case R.id.btn_mention:
+                c.setTextColor(Color.parseColor(getString(R.string.BtnTextNormalColor)));
+                mMentionBtn.setTextColor(Color.parseColor(getString(R.string.BtnTextPressedColor)));
+                mCurrentScreenId = v.getId();
+                mActivityHelper.slideMenuAnimate(mContent, mMenuWidth);
+                setMentionListview();
+                mRefreshButton.setVisibility(View.GONE);
+                return;
 
-    private boolean isOnline() {
-        return mSharedPreferences.getString(Const.PREF_KEY_TOKEN, null) != null;
+            case R.id.btn_logout:
+                c.setTextColor(Color.parseColor(getString(R.string.BtnTextNormalColor)));
+                mLogoutBtn.setTextColor(Color.parseColor(getString(R.string.BtnTextPressedColor)));
+                mCurrentScreenId = mTimelineBtn.getId();
+                logOut();
+                break;
+            default:
+                mActivityHelper.slideMenuAnimate(mContent, mMenuWidth);
+                break;
+        }
     }
 
     private void logOut() {
-        Editor e = mSharedPreferences.edit();
-        e.clear();
-        e.commit();
+        mAccount.logOut();
         startActivity(new Intent(TimelineActivity.this, LoginActivity.class));
-    }
-
-    private HashMap<String, String> makeStatusMap(Status status) {
-        HashMap<String, String> map = new HashMap<String, String>();
-
-        map.put(Const.KEY_UNAME, status.getUser().getScreenName());
-        map.put(Const.KEY_TWEET, status.getText());
-        String format = "MM-dd HH:mm";
-        SimpleDateFormat sdf = new SimpleDateFormat(format, Locale.JAPAN);
-        map.put(Const.KEY_DATE, sdf.format(status.getCreatedAt()));
-        map.put(Const.KEY_AVATAR, status.getUser().getProfileImageURL());
-
-        return map;
     }
 
     /**
@@ -305,142 +226,17 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
     }
 
     public void startStreamingTimeline() {
-        UserStreamListener listener = new UserStreamListener() {
+        if (sTwitterStream == null) return;
+
+        UserStreamAdapter streamAdapter = new UserStreamAdapter() {
             @Override
             public void onStatus(final Status status) {
-                HashMap<String, String> map = makeStatusMap(status);
-                mTweets.add(0, map);
-            }
-
-            @Override
-            public void onUserListSubscription(User arg0, User arg1, UserList arg2) {
-                // TODO Auto-generated method stub
-            }
-
-            @Override
-            public void onDeletionNotice(StatusDeletionNotice arg0) {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public void onScrubGeo(long arg0, long arg1) {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public void onStallWarning(StallWarning arg0) {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public void onTrackLimitationNotice(int arg0) {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public void onException(Exception arg0) {
-                // TODO Auto-generated method stub
-            }
-
-            @Override
-            public void onBlock(User arg0, User arg1) {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public void onDeletionNotice(long arg0, long arg1) {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public void onDirectMessage(DirectMessage arg0) {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public void onFavorite(User arg0, User arg1, Status arg2) {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public void onFollow(User arg0, User arg1) {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public void onFriendList(long[] arg0) {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public void onUnblock(User arg0, User arg1) {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public void onUnfavorite(User arg0, User arg1, Status arg2) {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public void onUserListCreation(User arg0, UserList arg1) {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public void onUserListDeletion(User arg0, UserList arg1) {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public void onUserListMemberAddition(User arg0, User arg1, UserList arg2) {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public void onUserListMemberDeletion(User arg0, User arg1, UserList arg2) {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public void onUserListUnsubscription(User arg0, User arg1, UserList arg2) {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public void onUserListUpdate(User arg0, UserList arg1) {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public void onUserProfileUpdate(User arg0) {
-                // TODO Auto-generated method stub
-
+                mTweets.add(0, mActivityHelper.makeStatusMap(status));
             }
         };
-        if (mTwitterStream == null) {
-            return;
-        }
-        mTwitterStream.addListener(listener);
-        mTwitterStream.user();
+
+        sTwitterStream.addListener(streamAdapter);
+        sTwitterStream.user();
     }
 
     /**
@@ -457,17 +253,16 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
 
             try {
                 List<twitter4j.Status> mentions;
-                mentions = mTwitter.getMentionsTimeline();
+                mentions = sTwitter.getMentionsTimeline();
                 for (twitter4j.Status status : mentions) {
-                    HashMap<String, String> map = makeStatusMap(status);
-                    mMentions.add(map);
+                    mMentions.add(mActivityHelper.makeStatusMap(status));
                 }
             } catch (TwitterException e) {
                 e.printStackTrace();
             }
             return null;
         }
-        
+
         protected void onPreExecute() {
             progressDialog = ProgressDialog.show(TimelineActivity.this, "", "Loading Mention...");
             return;
@@ -482,8 +277,8 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
             progressDialog.dismiss();
         }
     }
-    
-    
+
+
     private class FetchTimelineTask extends AsyncTask<Void, Void, Void> {
         ProgressDialog progressDialog;
 
@@ -491,12 +286,11 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
         protected Void doInBackground(Void... params) {
             List<twitter4j.Status> statuses;
             try {
-                statuses = mTwitter.getHomeTimeline();
+                statuses = sTwitter.getHomeTimeline();
                 mTweets = new ArrayList<HashMap<String, String>>();
 
                 for (twitter4j.Status status : statuses) {
-                    HashMap<String, String> map = makeStatusMap(status);
-                    mTweets.add(map);
+                    mTweets.add(mActivityHelper.makeStatusMap(status));
                 }
             } catch (TwitterException e) {
                 e.printStackTrace();
@@ -508,7 +302,7 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
             progressDialog = ProgressDialog.show(TimelineActivity.this, "", "Loading Timeline...");
             return;
         }
-        
+
         protected void onPostExecute(Void result) {
             Activity currentActivity = ((MainApplication) getApplicationContext())
                     .getCurrentActivity();
@@ -518,18 +312,18 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
             progressDialog.dismiss();
         }
     }
-    
+
     private class UpdateStatusTask extends AsyncTask<String, Void, Void> {
         @Override
         protected Void doInBackground(String... params) {
             String status = params[0];
             try {
-                mTwitter.updateStatus(status);
+                sTwitter.updateStatus(status);
             } catch (TwitterException e) {
                 Activity currentActivity = ((MainApplication) getApplicationContext())
                         .getCurrentActivity();
                 Toast.makeText(currentActivity, Const.UPDATE_STATUS_ERROR, Toast.LENGTH_SHORT)
-                        .show();
+                .show();
             }
             return null;
         }
@@ -538,7 +332,7 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
             Activity currentActivity = ((MainApplication) getApplicationContext())
                     .getCurrentActivity();
             Toast.makeText(currentActivity, Const.UPDATE_STATUS_SUCCESS, Toast.LENGTH_SHORT)
-                    .show();
+            .show();
         }
     }
 }
