@@ -86,6 +86,11 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.main);
 
+        initViews();
+        initActivityOrStartLogin();
+    }
+
+    private void initViews() {
         mListView = (ListView) findViewById(R.id.tweetListView);
         mMenu = (LinearLayout) findViewById(R.id.menu);
         mContent = (LinearLayout) findViewById(R.id.content);
@@ -113,7 +118,9 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
         mLogoutBtn.setOnClickListener(this);
         mPostBtn.setOnClickListener(this);
         mRefreshButton.setOnClickListener(this);
+    }
 
+    private void initActivityOrStartLogin() {
         sSharedPreferences = getSharedPreferences(Const.PREFERENCE_NAME, MODE_PRIVATE);
         if (!isOnline() || !Utils.haveNetworkConnection(this)) {
             startActivity(new Intent(TimelineActivity.this, LoginActivity.class));
