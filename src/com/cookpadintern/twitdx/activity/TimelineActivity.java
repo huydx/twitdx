@@ -305,141 +305,17 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
     }
 
     public void startStreamingTimeline() {
-        UserStreamListener listener = new UserStreamListener() {
+        if (sTwitterStream == null) return;
+
+        UserStreamAdapter streamAdapter = new UserStreamAdapter() {
             @Override
             public void onStatus(final Status status) {
                 HashMap<String, String> map = makeStatusMap(status);
                 mTweets.add(0, map);
             }
-
-            @Override
-            public void onUserListSubscription(User arg0, User arg1, UserList arg2) {
-                // TODO Auto-generated method stub
-            }
-
-            @Override
-            public void onDeletionNotice(StatusDeletionNotice arg0) {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public void onScrubGeo(long arg0, long arg1) {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public void onStallWarning(StallWarning arg0) {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public void onTrackLimitationNotice(int arg0) {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public void onException(Exception arg0) {
-                // TODO Auto-generated method stub
-            }
-
-            @Override
-            public void onBlock(User arg0, User arg1) {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public void onDeletionNotice(long arg0, long arg1) {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public void onDirectMessage(DirectMessage arg0) {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public void onFavorite(User arg0, User arg1, Status arg2) {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public void onFollow(User arg0, User arg1) {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public void onFriendList(long[] arg0) {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public void onUnblock(User arg0, User arg1) {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public void onUnfavorite(User arg0, User arg1, Status arg2) {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public void onUserListCreation(User arg0, UserList arg1) {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public void onUserListDeletion(User arg0, UserList arg1) {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public void onUserListMemberAddition(User arg0, User arg1, UserList arg2) {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public void onUserListMemberDeletion(User arg0, User arg1, UserList arg2) {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public void onUserListUnsubscription(User arg0, User arg1, UserList arg2) {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public void onUserListUpdate(User arg0, UserList arg1) {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public void onUserProfileUpdate(User arg0) {
-                // TODO Auto-generated method stub
-
-            }
         };
-        if (sTwitterStream == null) {
-            return;
-        }
-        sTwitterStream.addListener(listener);
+
+        sTwitterStream.addListener(streamAdapter);
         sTwitterStream.user();
     }
 
