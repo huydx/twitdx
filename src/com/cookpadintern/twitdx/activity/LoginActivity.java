@@ -9,8 +9,6 @@ import twitter4j.conf.Configuration;
 import twitter4j.conf.ConfigurationBuilder;
 import android.app.Activity;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.SharedPreferences.Editor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -25,12 +23,13 @@ import com.cookpadintern.twitdx.common.Const;
 import com.cookpadintern.twitdx.common.Utils;
 import com.cookpadintern.twitdx.customize.BaseActivity;
 import com.cookpadintern.twitdx.customize.MainApplication;
+import com.cookpadintern.twitdx.model.TwitterAccount;
 
 public class LoginActivity extends BaseActivity implements OnClickListener {
     private ImageButton mLoginButton;
     private static Twitter sTwitter;
     private static RequestToken sRequestToken;
-    private static SharedPreferences sSharedPreferences;
+    private TwitterAccount mAccount;
 
     /**
      * ************************* 
@@ -45,7 +44,7 @@ public class LoginActivity extends BaseActivity implements OnClickListener {
         mLoginButton = (ImageButton) findViewById(R.id.btn_login);
         mLoginButton.setOnClickListener(this);
 
-        sSharedPreferences = getSharedPreferences(Const.PREFERENCE_NAME, MODE_PRIVATE);
+        mAccount = new TwitterAccount(this);
         FetchTokenTask fetchToken = new FetchTokenTask();
         fetchToken.execute();
     }
@@ -74,7 +73,6 @@ public class LoginActivity extends BaseActivity implements OnClickListener {
     private class FetchTokenTask extends AsyncTask<Void, Void, Void> {
         @Override
         protected Void doInBackground(Void... params) {
-            sSharedPreferences = getSharedPreferences(Const.PREFERENCE_NAME, MODE_PRIVATE);
 
             // handle oAuth callback
             Uri uri = getIntent().getData();
@@ -82,11 +80,7 @@ public class LoginActivity extends BaseActivity implements OnClickListener {
                 String verifier = uri.getQueryParameter(Const.IEXTRA_OAUTH_VERIFIER);
                 try {
                     AccessToken accessToken = sTwitter.getOAuthAccessToken(sRequestToken, verifier);
-                    Editor e = sSharedPreferences.edit();
-                    e.putString(Const.PREF_KEY_TOKEN, accessToken.getToken());
-                    e.putString(Const.PREF_KEY_SECRET, accessToken.getTokenSecret());
-                    e.putBoolean(Const.LOGGED_IN, true);
-                    e.commit();
+                    mAccount.saveToken(accessToken);
                     startActivity(new Intent(LoginActivity.this, TimelineActivity.class));
                 } catch (Exception e) {
                     Activity currentActivity = ((MainApplication) getApplicationContext())

@@ -20,8 +20,6 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.SharedPreferences.Editor;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -44,13 +42,14 @@ import com.cookpadintern.twitdx.common.Utils;
 import com.cookpadintern.twitdx.customize.BaseActivity;
 import com.cookpadintern.twitdx.customize.MainApplication;
 import com.cookpadintern.twitdx.customize.TweetListviewAdapter;
+import com.cookpadintern.twitdx.model.TwitterAccount;
 
 public class TimelineActivity extends BaseActivity implements OnClickListener {
     protected MainApplication mMainApp;
 
-    private static SharedPreferences sSharedPreferences;
     private static TwitterStream sTwitterStream;
     private static Twitter sTwitter;
+    private TwitterAccount mAccount;
 
     private LinearLayout mMenu;
     private LinearLayout mContent;
@@ -121,12 +120,12 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
     }
 
     private void initActivityOrStartLogin() {
-        sSharedPreferences = getSharedPreferences(Const.PREFERENCE_NAME, MODE_PRIVATE);
-        if (!isOnline() || !Utils.haveNetworkConnection(this)) {
+        mAccount = new TwitterAccount(this);
+        if (mAccount.isNotOnline() || !Utils.haveNetworkConnection(this)) {
             startActivity(new Intent(TimelineActivity.this, LoginActivity.class));
         } else {
-            String oauthAccessToken = sSharedPreferences.getString(Const.PREF_KEY_TOKEN, "");
-            String oAuthAccessTokenSecret = sSharedPreferences.getString(Const.PREF_KEY_SECRET, "");
+            String oauthAccessToken = mAccount.getAccessToken();
+            String oAuthAccessTokenSecret = mAccount.getAccessTokenSecret();
 
             ConfigurationBuilder confbuilder = new ConfigurationBuilder();
             Configuration conf = confbuilder.setOAuthConsumerKey(Const.CONSUMER_KEY)
@@ -272,14 +271,8 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
         mContent.startAnimation(mSlide);
     }
 
-    private boolean isOnline() {
-        return sSharedPreferences.getString(Const.PREF_KEY_TOKEN, null) != null;
-    }
-
     private void logOut() {
-        Editor e = sSharedPreferences.edit();
-        e.clear();
-        e.commit();
+        mAccount.logOut();
         startActivity(new Intent(TimelineActivity.this, LoginActivity.class));
     }
 
