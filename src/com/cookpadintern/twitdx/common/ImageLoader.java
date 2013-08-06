@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -22,11 +23,14 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.util.Log;
 import android.widget.ImageView;
 
 import com.cookpadintern.twitdx.R;
+import com.cookpadintern.twitdx.util.CloseableUtils;
 
 public class ImageLoader {
+    private static final String TAG = ImageLoader.class.getSimpleName();
     private final int stubId = R.drawable.no_image;
 
     private MemoryCache mMemoryCache = new MemoryCache();
@@ -57,42 +61,55 @@ public class ImageLoader {
     }
 
     private Bitmap getBitmap(String url) {
-        File file = mFileCache.getFile(url);
-
         //from SD cache
-        Bitmap bitmap = decodeFile(file);
+        Bitmap bitmap = getBitmapFromFile(url);
         if (bitmap != null) return bitmap;
 
         //from web
+        try {
+            return getBitmapFromNetwork(url);
+        } catch (IOException e) {
+            Log.d(TAG, "An error occurred while fetching image from network", e);
+            return null;
+        }
+    }
+
+    public static void CopyStream(InputStream is, OutputStream os) throws IOException {
+        final int bufferSize = 1024;
+        byte[] bytes = new byte[bufferSize];
+        while (true) {
+            int count = is.read(bytes, 0, bufferSize);
+            if (count == -1)
+                break;
+            os.write(bytes, 0, count);
+        }
+    }
+
+    private Bitmap getBitmapFromFile(String url) {
+        File file = mFileCache.getFile(url);
+        return decodeFile(file);
+    }
+
+    private Bitmap getBitmapFromNetwork(String url) throws IOException {
+        InputStream is = null;
+        OutputStream os = null;
         try {
             URL imageUrl = new URL(url);
             HttpURLConnection conn = (HttpURLConnection) imageUrl.openConnection();
             conn.setConnectTimeout(30000);
             conn.setReadTimeout(30000);
             conn.setInstanceFollowRedirects(true);
-            InputStream is = conn.getInputStream();
-            OutputStream os = new FileOutputStream(file);
-            CopyStream(is, os);
-            os.close();
-            bitmap = decodeFile(file);
-            return bitmap;
-        } catch (Exception ex){
-            ex.printStackTrace();
-            return null;
-        }
-    }
 
-    public static void CopyStream(InputStream is, OutputStream os) {
-        final int bufferSize = 1024;
-        try {
-            byte[] bytes = new byte[bufferSize];
-            while (true) {
-                int count = is.read(bytes, 0, bufferSize);
-                if (count == -1)
-                    break;
-                os.write(bytes, 0, count);
-            }
-        } catch (Exception ex) {
+            is = conn.getInputStream();
+            File file = mFileCache.getFile(url);
+            os = new FileOutputStream(file);
+            CopyStream(is, os);
+
+            return decodeFile(file);
+        } catch (IOException e) {
+            CloseableUtils.close(is);
+            CloseableUtils.close(os);
+            throw e; // rethrow exception
         }
     }
 
