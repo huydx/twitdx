@@ -1,6 +1,8 @@
 package com.cookpadintern.twitdx.model;
 
 import twitter4j.auth.AccessToken;
+import twitter4j.conf.Configuration;
+import twitter4j.conf.ConfigurationBuilder;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
@@ -11,7 +13,7 @@ public class TwitterAccount {
     private static final String PREFERENCE_NAME = "twitter_oauth";
     private static final String PREF_KEY_SECRET = "oauth_token_secret";
     private static final String PREF_KEY_TOKEN = "oauth_token";
-    
+
     private SharedPreferences sSharedPreferences;
 
     public TwitterAccount(Context context) {
@@ -47,5 +49,18 @@ public class TwitterAccount {
         Editor editor = sSharedPreferences.edit();
         editor.clear();
         editor.commit();
+    }
+
+    public Configuration buildTwitterConfiguration() {
+        String oauthAccessToken = getAccessToken();
+        String oAuthAccessTokenSecret = getAccessTokenSecret();
+
+        ConfigurationBuilder confbuilder = new ConfigurationBuilder();
+        Configuration conf = confbuilder.setOAuthConsumerKey(Const.CONSUMER_KEY)
+                .setOAuthConsumerSecret(Const.CONSUMER_SECRET)
+                .setOAuthAccessToken(oauthAccessToken)
+                .setOAuthAccessTokenSecret(oAuthAccessTokenSecret).build();
+
+        return conf;
     }
 }

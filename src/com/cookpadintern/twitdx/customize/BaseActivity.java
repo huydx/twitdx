@@ -15,6 +15,10 @@ public class BaseActivity extends Activity {
         mMainApp = (MainApplication)this.getApplicationContext();
     }
 
+    protected MainApplication getTwitdxApplication() {
+        return (MainApplication) getApplication();
+    }
+
     protected void onResume() {
         super.onResume();
         mMainApp.setCurrentActivity(this);

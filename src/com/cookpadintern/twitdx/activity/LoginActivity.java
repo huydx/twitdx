@@ -23,13 +23,11 @@ import com.cookpadintern.twitdx.common.Const;
 import com.cookpadintern.twitdx.common.Utils;
 import com.cookpadintern.twitdx.customize.BaseActivity;
 import com.cookpadintern.twitdx.customize.MainApplication;
-import com.cookpadintern.twitdx.model.TwitterAccount;
 
 public class LoginActivity extends BaseActivity implements OnClickListener {
     private ImageButton mLoginButton;
     private static Twitter sTwitter;
     private static RequestToken sRequestToken;
-    private TwitterAccount mAccount;
 
     /**
      * ************************* 
@@ -44,7 +42,6 @@ public class LoginActivity extends BaseActivity implements OnClickListener {
         mLoginButton = (ImageButton) findViewById(R.id.btn_login);
         mLoginButton.setOnClickListener(this);
 
-        mAccount = new TwitterAccount(this);
         FetchTokenTask fetchToken = new FetchTokenTask();
         fetchToken.execute();
     }
@@ -80,7 +77,7 @@ public class LoginActivity extends BaseActivity implements OnClickListener {
                 String verifier = uri.getQueryParameter(Const.IEXTRA_OAUTH_VERIFIER);
                 try {
                     AccessToken accessToken = sTwitter.getOAuthAccessToken(sRequestToken, verifier);
-                    mAccount.saveToken(accessToken);
+                    getTwitdxApplication().getAccount().saveToken(accessToken);
                     startActivity(new Intent(LoginActivity.this, TimelineActivity.class));
                 } catch (Exception e) {
                     Activity currentActivity = ((MainApplication) getApplicationContext())

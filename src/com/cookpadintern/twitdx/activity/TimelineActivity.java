@@ -14,7 +14,6 @@ import twitter4j.TwitterStream;
 import twitter4j.TwitterStreamFactory;
 import twitter4j.UserStreamAdapter;
 import twitter4j.conf.Configuration;
-import twitter4j.conf.ConfigurationBuilder;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -120,18 +119,11 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
     }
 
     private void initActivityOrStartLogin() {
-        mAccount = new TwitterAccount(this);
+        mAccount = getTwitdxApplication().getAccount();
         if (mAccount.isNotOnline() || !Utils.haveNetworkConnection(this)) {
             startActivity(new Intent(TimelineActivity.this, LoginActivity.class));
         } else {
-            String oauthAccessToken = mAccount.getAccessToken();
-            String oAuthAccessTokenSecret = mAccount.getAccessTokenSecret();
-
-            ConfigurationBuilder confbuilder = new ConfigurationBuilder();
-            Configuration conf = confbuilder.setOAuthConsumerKey(Const.CONSUMER_KEY)
-                    .setOAuthConsumerSecret(Const.CONSUMER_SECRET)
-                    .setOAuthAccessToken(oauthAccessToken)
-                    .setOAuthAccessTokenSecret(oAuthAccessTokenSecret).build();
+            Configuration conf = mAccount.buildTwitterConfiguration();
 
             // first fetch current timeline
             sTwitter = new TwitterFactory(conf).getInstance();
