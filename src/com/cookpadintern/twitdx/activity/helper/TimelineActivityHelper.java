@@ -23,7 +23,7 @@ public class TimelineActivityHelper {
         mContext = context;
     }
 
-    public HashMap<String, String> makeStatusMap(Status status) {
+    public synchronized HashMap<String, String> makeStatusMap(Status status) {
         HashMap<String, String> map = new HashMap<String, String>();
 
         map.put(Const.KEY_UNAME, status.getUser().getScreenName());
