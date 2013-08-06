@@ -48,9 +48,9 @@ import android.widget.Toast;
 public class TimelineActivity extends BaseActivity implements OnClickListener {
     protected MainApplication mMainApp;
 
-    private static SharedPreferences mSharedPreferences;
-    private static TwitterStream mTwitterStream;
-    private static Twitter mTwitter;
+    private static SharedPreferences sSharedPreferences;
+    private static TwitterStream sTwitterStream;
+    private static Twitter sTwitter;
 
     private LinearLayout mMenu;
     private LinearLayout mContent;
@@ -114,12 +114,12 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
         mPostBtn.setOnClickListener(this);
         mRefreshButton.setOnClickListener(this);
 
-        mSharedPreferences = getSharedPreferences(Const.PREFERENCE_NAME, MODE_PRIVATE);
+        sSharedPreferences = getSharedPreferences(Const.PREFERENCE_NAME, MODE_PRIVATE);
         if (!isOnline() || !Utils.haveNetworkConnection(this)) {
             startActivity(new Intent(TimelineActivity.this, LoginActivity.class));
         } else {
-            String oauthAccessToken = mSharedPreferences.getString(Const.PREF_KEY_TOKEN, "");
-            String oAuthAccessTokenSecret = mSharedPreferences.getString(Const.PREF_KEY_SECRET, "");
+            String oauthAccessToken = sSharedPreferences.getString(Const.PREF_KEY_TOKEN, "");
+            String oAuthAccessTokenSecret = sSharedPreferences.getString(Const.PREF_KEY_SECRET, "");
 
             ConfigurationBuilder confbuilder = new ConfigurationBuilder();
             Configuration conf = confbuilder.setOAuthConsumerKey(Const.CONSUMER_KEY)
@@ -128,8 +128,8 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
                     .setOAuthAccessTokenSecret(oAuthAccessTokenSecret).build();
 
             // first fetch current timeline
-            mTwitter = new TwitterFactory(conf).getInstance();
-            mTwitterStream = new TwitterStreamFactory(conf).getInstance();
+            sTwitter = new TwitterFactory(conf).getInstance();
+            sTwitterStream = new TwitterStreamFactory(conf).getInstance();
 
             setTimelineToView();
             startStreamingTimeline();
@@ -266,11 +266,11 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
     }
 
     private boolean isOnline() {
-        return mSharedPreferences.getString(Const.PREF_KEY_TOKEN, null) != null;
+        return sSharedPreferences.getString(Const.PREF_KEY_TOKEN, null) != null;
     }
 
     private void logOut() {
-        Editor e = mSharedPreferences.edit();
+        Editor e = sSharedPreferences.edit();
         e.clear();
         e.commit();
         startActivity(new Intent(TimelineActivity.this, LoginActivity.class));
@@ -436,11 +436,11 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
 
             }
         };
-        if (mTwitterStream == null) {
+        if (sTwitterStream == null) {
             return;
         }
-        mTwitterStream.addListener(listener);
-        mTwitterStream.user();
+        sTwitterStream.addListener(listener);
+        sTwitterStream.user();
     }
 
     /**
@@ -457,7 +457,7 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
 
             try {
                 List<twitter4j.Status> mentions;
-                mentions = mTwitter.getMentionsTimeline();
+                mentions = sTwitter.getMentionsTimeline();
                 for (twitter4j.Status status : mentions) {
                     HashMap<String, String> map = makeStatusMap(status);
                     mMentions.add(map);
@@ -491,7 +491,7 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
         protected Void doInBackground(Void... params) {
             List<twitter4j.Status> statuses;
             try {
-                statuses = mTwitter.getHomeTimeline();
+                statuses = sTwitter.getHomeTimeline();
                 mTweets = new ArrayList<HashMap<String, String>>();
 
                 for (twitter4j.Status status : statuses) {
@@ -524,7 +524,7 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
         protected Void doInBackground(String... params) {
             String status = params[0];
             try {
-                mTwitter.updateStatus(status);
+                sTwitter.updateStatus(status);
             } catch (TwitterException e) {
                 Activity currentActivity = ((MainApplication) getApplicationContext())
                         .getCurrentActivity();

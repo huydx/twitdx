@@ -28,21 +28,21 @@ import android.widget.ImageView;
 
 public class ImageLoader {
 
-    MemoryCache memoryCache=new MemoryCache();
-    FileCache fileCache;
-    private Map<ImageView, String> imageViews=Collections.synchronizedMap(new WeakHashMap<ImageView, String>());
-    ExecutorService executorService; 
+    private MemoryCache mMemoryCache = new MemoryCache();
+    private FileCache mFileCache;
+    private Map<ImageView, String> mImageViews = Collections.synchronizedMap(new WeakHashMap<ImageView, String>());
+    private ExecutorService mExecutorService; 
 
     public ImageLoader(Context context){
-        fileCache=new FileCache(context);
-        executorService = Executors.newFixedThreadPool(5);
+        mFileCache=new FileCache(context);
+        mExecutorService = Executors.newFixedThreadPool(5);
     }
 
     final int stub_id = R.drawable.no_image;
     public void DisplayImage(String url, ImageView imageView)
     {
-        imageViews.put(imageView, url);
-        Bitmap bitmap=memoryCache.get(url);
+        mImageViews.put(imageView, url);
+        Bitmap bitmap=mMemoryCache.get(url);
         if(bitmap!=null)
             imageView.setImageBitmap(bitmap);
         else
@@ -55,12 +55,12 @@ public class ImageLoader {
     private void queuePhoto(String url, ImageView imageView)
     {
         PhotoToLoad p=new PhotoToLoad(url, imageView);
-        executorService.submit(new PhotosLoader(p));
+        mExecutorService.submit(new PhotosLoader(p));
     }
 
     private Bitmap getBitmap(String url) 
     {
-        File f=fileCache.getFile(url);
+        File f=mFileCache.getFile(url);
 
         //from SD cache
         Bitmap b = decodeFile(f);
@@ -153,7 +153,7 @@ public class ImageLoader {
             }
 
             Bitmap bmp = getBitmap(photoToLoad.url);
-            memoryCache.put(photoToLoad.url, bmp);
+            mMemoryCache.put(photoToLoad.url, bmp);
             if(imageViewReused(photoToLoad))
                 return;
             BitmapDisplayer bd = new BitmapDisplayer(bmp, photoToLoad);
@@ -163,7 +163,7 @@ public class ImageLoader {
     }
 
     boolean imageViewReused(PhotoToLoad photoToLoad){
-        String tag=imageViews.get(photoToLoad.imageView);
+        String tag=mImageViews.get(photoToLoad.imageView);
         if(tag==null || !tag.equals(photoToLoad.url))
             return true;
         return false;
@@ -187,8 +187,8 @@ public class ImageLoader {
     }
 
     public void clearCache() {
-        memoryCache.clear();
-        fileCache.clear();
+        mMemoryCache.clear();
+        mFileCache.clear();
     }
 }
 

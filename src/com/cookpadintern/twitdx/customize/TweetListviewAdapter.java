@@ -17,21 +17,21 @@ import android.widget.TextView;
 
 public class TweetListviewAdapter extends BaseAdapter {
 
-    private Activity activity;
-    private ArrayList<HashMap<String, String>> tweets;
-    private static LayoutInflater inflater=null;
+    private Activity mActivity;
+    private ArrayList<HashMap<String, String>> mTweets;
+    private static LayoutInflater sInflater = null;
     public ImageLoader imageLoader; 
 
     public TweetListviewAdapter(Activity a, ArrayList<HashMap<String, String>> d) {
-        activity = a;
-        tweets = d;
-        inflater = (LayoutInflater)activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        imageLoader=new ImageLoader(activity.getApplicationContext());
+        mActivity = a;
+        mTweets = d;
+        sInflater = (LayoutInflater)mActivity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        imageLoader=new ImageLoader(mActivity.getApplicationContext());
     }
 
     @Override
     public int getCount() {
-        return tweets.size();
+        return mTweets.size();
     }
 
     @Override
@@ -48,7 +48,7 @@ public class TweetListviewAdapter extends BaseAdapter {
     public View getView(int position, View convertView, ViewGroup parent) {
         View view = convertView;
         if(convertView == null) {
-            view  = inflater.inflate(R.layout.single_tweet, null);
+            view  = sInflater.inflate(R.layout.single_tweet, null);
         }
 
         TextView uname = (TextView)view .findViewById(R.id.uname);
@@ -57,7 +57,7 @@ public class TweetListviewAdapter extends BaseAdapter {
         ImageView thumb_image = (ImageView)view .findViewById(R.id.avatar);
 
         HashMap<String, String> single_tweet = new HashMap<String, String>();
-        single_tweet = tweets.get(position);
+        single_tweet = mTweets.get(position);
         uname.setText(single_tweet.get(Const.KEY_UNAME));
         tweet.setText(single_tweet.get(Const.KEY_TWEET));
         date.setText(single_tweet.get(Const.KEY_DATE));
