@@ -23,9 +23,9 @@ public class TweetListviewAdapter extends BaseAdapter {
     private static LayoutInflater sInflater = null;
     public ImageLoader imageLoader; 
 
-    public TweetListviewAdapter(Activity a, ArrayList<HashMap<String, String>> d) {
-        mActivity = a;
-        mTweets = d;
+    public TweetListviewAdapter(Activity activity, ArrayList<HashMap<String, String>> tweetList) {
+        mActivity = activity;
+        mTweets = tweetList;
         sInflater = (LayoutInflater)mActivity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         imageLoader=new ImageLoader(mActivity.getApplicationContext());
     }
