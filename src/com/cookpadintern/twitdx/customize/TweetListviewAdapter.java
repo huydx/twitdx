@@ -26,8 +26,8 @@ public class TweetListviewAdapter extends BaseAdapter {
     public TweetListviewAdapter(Activity activity, ArrayList<HashMap<String, String>> tweetList) {
         mActivity = activity;
         mTweets = tweetList;
-        sInflater = (LayoutInflater)mActivity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        imageLoader=new ImageLoader(mActivity.getApplicationContext());
+        sInflater = (LayoutInflater) mActivity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        imageLoader = new ImageLoader (mActivity.getApplicationContext());
     }
 
     @Override
@@ -52,10 +52,10 @@ public class TweetListviewAdapter extends BaseAdapter {
             view  = sInflater.inflate(R.layout.single_tweet, null);
         }
 
-        TextView uname = (TextView)view .findViewById(R.id.uname);
-        TextView tweet = (TextView)view .findViewById(R.id.tweet);
-        TextView date = (TextView)view .findViewById(R.id.date);
-        ImageView thumb_image = (ImageView)view .findViewById(R.id.avatar);
+        TextView uname = (TextView) view.findViewById(R.id.uname);
+        TextView tweet = (TextView) view.findViewById(R.id.tweet);
+        TextView date = (TextView) view.findViewById(R.id.date);
+        ImageView thumb_image = (ImageView) view.findViewById(R.id.avatar);
 
         HashMap<String, String> single_tweet = new HashMap<String, String>();
         single_tweet = mTweets.get(position);
