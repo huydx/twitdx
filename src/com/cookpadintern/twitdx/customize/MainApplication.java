@@ -17,6 +17,7 @@ public class MainApplication extends Application {
     public Activity getCurrentActivity(){
         return mCurrentActivity;
     }
+
     public void setCurrentActivity(Activity mCurrentActivity){
         this.mCurrentActivity = mCurrentActivity;
     }

@@ -14,15 +14,18 @@ public class BaseActivity extends Activity {
         super.onCreate(savedInstanceState);
         mMainApp = (MainApplication)this.getApplicationContext();
     }
+
     protected void onResume() {
         super.onResume();
         mMainApp.setCurrentActivity(this);
     }
+
     protected void onPause() {
         clearReferences();
         super.onPause();
     }
-    protected void onDestroy() {        
+
+    protected void onDestroy() {
         clearReferences();
         super.onDestroy();
     }

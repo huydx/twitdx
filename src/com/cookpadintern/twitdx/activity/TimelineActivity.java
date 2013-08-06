@@ -84,7 +84,7 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        setContentView(R.layout.main);		
+        setContentView(R.layout.main);
 
         mListView = (ListView) findViewById(R.id.tweetListView);
         mMenu = (LinearLayout) findViewById(R.id.menu);

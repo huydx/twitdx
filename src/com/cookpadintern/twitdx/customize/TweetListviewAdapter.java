@@ -56,8 +56,6 @@ public class TweetListviewAdapter extends BaseAdapter {
         TextView date = (TextView)view .findViewById(R.id.date);
         ImageView thumb_image = (ImageView)view .findViewById(R.id.avatar);
 
-
-
         HashMap<String, String> single_tweet = new HashMap<String, String>();
         single_tweet = tweets.get(position);
         uname.setText(single_tweet.get(Const.KEY_UNAME));

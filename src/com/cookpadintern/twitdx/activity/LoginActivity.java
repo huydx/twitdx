@@ -23,10 +23,10 @@ import twitter4j.conf.Configuration;
 import twitter4j.conf.ConfigurationBuilder;
 
 public class LoginActivity extends BaseActivity implements OnClickListener {
-    private ImageButton loginButton;
-    private static Twitter mTwitter;
-    private static RequestToken mRequestToken;
-    private static SharedPreferences mSharedPreferences;
+    private ImageButton mLoginButton;
+    private static Twitter sTwitter;
+    private static RequestToken sRequestToken;
+    private static SharedPreferences sSharedPreferences;
 
     /**
      * ************************* 
@@ -38,10 +38,10 @@ public class LoginActivity extends BaseActivity implements OnClickListener {
         super.onCreate(savedInstanceState);
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.login);
-        loginButton = (ImageButton) findViewById(R.id.btn_login);
-        loginButton.setOnClickListener(this);
+        mLoginButton = (ImageButton) findViewById(R.id.btn_login);
+        mLoginButton.setOnClickListener(this);
 
-        mSharedPreferences = getSharedPreferences(Const.PREFERENCE_NAME, MODE_PRIVATE);
+        sSharedPreferences = getSharedPreferences(Const.PREFERENCE_NAME, MODE_PRIVATE);
         FetchTokenTask fetchToken = new FetchTokenTask();
         fetchToken.execute();
     }
@@ -70,15 +70,15 @@ public class LoginActivity extends BaseActivity implements OnClickListener {
     private class FetchTokenTask extends AsyncTask<Void, Void, Void> {
         @Override
         protected Void doInBackground(Void... params) {
-            mSharedPreferences = getSharedPreferences(Const.PREFERENCE_NAME, MODE_PRIVATE);
+            sSharedPreferences = getSharedPreferences(Const.PREFERENCE_NAME, MODE_PRIVATE);
 
             // handle oAuth callback
             Uri uri = getIntent().getData();
             if (uri != null && uri.toString().startsWith(Const.CALLBACK_URL)) {
                 String verifier = uri.getQueryParameter(Const.IEXTRA_OAUTH_VERIFIER);
                 try {
-                    AccessToken accessToken = mTwitter.getOAuthAccessToken(mRequestToken, verifier);
-                    Editor e = mSharedPreferences.edit();
+                    AccessToken accessToken = sTwitter.getOAuthAccessToken(sRequestToken, verifier);
+                    Editor e = sSharedPreferences.edit();
                     e.putString(Const.PREF_KEY_TOKEN, accessToken.getToken());
                     e.putString(Const.PREF_KEY_SECRET, accessToken.getTokenSecret());
                     e.putBoolean(Const.LOGGED_IN, true);
@@ -105,10 +105,10 @@ public class LoginActivity extends BaseActivity implements OnClickListener {
             configurationBuilder.setOAuthConsumerKey(Const.CONSUMER_KEY);
             configurationBuilder.setOAuthConsumerSecret(Const.CONSUMER_SECRET);
             Configuration configuration = configurationBuilder.build();
-            mTwitter = new TwitterFactory(configuration).getInstance();
+            sTwitter = new TwitterFactory(configuration).getInstance();
 
             try {
-                mRequestToken = mTwitter.getOAuthRequestToken(Const.CALLBACK_URL);                
+                sRequestToken = sTwitter.getOAuthRequestToken(Const.CALLBACK_URL);
             } catch (TwitterException e) {
                 e.printStackTrace();
             }
@@ -118,7 +118,7 @@ public class LoginActivity extends BaseActivity implements OnClickListener {
         protected void onPostExecute(Void result) {
             Activity currentActivity = ((MainApplication) getApplicationContext())
                     .getCurrentActivity();
-            currentActivity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(mRequestToken
+            currentActivity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(sRequestToken
                     .getAuthenticationURL())));
         }
     }
