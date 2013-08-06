@@ -31,6 +31,7 @@ import com.cookpadintern.twitdx.util.CloseableUtils;
 
 public class ImageLoader {
     private static final String TAG = ImageLoader.class.getSimpleName();
+    private static final int BITMAP_REQUIRED_SIZE = 70;
     private final int stubId = R.drawable.no_image;
 
     private MemoryCache mMemoryCache = new MemoryCache();
@@ -122,12 +123,11 @@ public class ImageLoader {
             BitmapFactory.decodeStream(new FileInputStream(file), null, bitmapOptions);
 
             //Find the correct scale value. It should be the power of 2.
-            final int REQUIRED_SIZE = 70;
             int width = bitmapOptions.outWidth;
             int height = bitmapOptions.outHeight;
             int scale = 1;
             while (true) {
-                if ((width / 2) < REQUIRED_SIZE || (height / 2) < REQUIRED_SIZE) break;
+                if (isBoxRequiredSize(width, height)) break;
 
                 width /= 2;
                 height /= 2;
@@ -140,6 +140,11 @@ public class ImageLoader {
             return BitmapFactory.decodeStream(new FileInputStream(file), null, sampleBitmapOptions);
         } catch (FileNotFoundException e) {}
         return null;
+    }
+
+    private boolean isBoxRequiredSize(int width, int height) {
+        return (width / 2) < BITMAP_REQUIRED_SIZE ||
+                (height / 2) < BITMAP_REQUIRED_SIZE;
     }
 
     //Task for the queue
