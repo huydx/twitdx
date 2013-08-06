@@ -5,6 +5,7 @@ github:https://github.com/huydx
 package com.cookpadintern.twitdx.common;
 
 import java.io.File;
+
 import android.content.Context;
 
 public class FileCache {

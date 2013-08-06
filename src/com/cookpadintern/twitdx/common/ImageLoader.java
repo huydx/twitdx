@@ -4,7 +4,6 @@ github:https://github.com/huydx
  */
 package com.cookpadintern.twitdx.common;
 
-import com.cookpadintern.twitdx.R;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -19,12 +18,13 @@ import java.util.WeakHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.widget.ImageView;
+
+import com.cookpadintern.twitdx.R;
 
 public class ImageLoader {
 

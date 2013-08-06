@@ -1,10 +1,12 @@
 package com.cookpadintern.twitdx.activity;
 
-import com.cookpadintern.twitdx.R;
-import com.cookpadintern.twitdx.common.*;
-import com.cookpadintern.twitdx.customize.BaseActivity;
-import com.cookpadintern.twitdx.customize.MainApplication;
-
+import twitter4j.Twitter;
+import twitter4j.TwitterException;
+import twitter4j.TwitterFactory;
+import twitter4j.auth.AccessToken;
+import twitter4j.auth.RequestToken;
+import twitter4j.conf.Configuration;
+import twitter4j.conf.ConfigurationBuilder;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -13,14 +15,16 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.Window;
-import android.view.View.*;
-import android.widget.*;
-import twitter4j.*;
-import twitter4j.auth.AccessToken;
-import twitter4j.auth.RequestToken;
-import twitter4j.conf.Configuration;
-import twitter4j.conf.ConfigurationBuilder;
+import android.widget.ImageButton;
+import android.widget.Toast;
+
+import com.cookpadintern.twitdx.R;
+import com.cookpadintern.twitdx.common.Const;
+import com.cookpadintern.twitdx.common.Utils;
+import com.cookpadintern.twitdx.customize.BaseActivity;
+import com.cookpadintern.twitdx.customize.MainApplication;
 
 public class LoginActivity extends BaseActivity implements OnClickListener {
     private ImageButton mLoginButton;

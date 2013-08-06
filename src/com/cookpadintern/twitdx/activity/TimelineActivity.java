@@ -6,22 +6,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 
-import twitter4j.DirectMessage;
-import twitter4j.StallWarning;
 import twitter4j.Status;
-import twitter4j.StatusDeletionNotice;
+import twitter4j.Twitter;
 import twitter4j.TwitterException;
+import twitter4j.TwitterFactory;
 import twitter4j.TwitterStream;
-import twitter4j.User;
-import twitter4j.UserList;
+import twitter4j.TwitterStreamFactory;
+import twitter4j.UserStreamAdapter;
 import twitter4j.conf.Configuration;
 import twitter4j.conf.ConfigurationBuilder;
-import twitter4j.*;
-
-import com.cookpadintern.twitdx.R;
-import com.cookpadintern.twitdx.common.*;
-import com.cookpadintern.twitdx.customize.*;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -33,17 +26,24 @@ import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
-import android.view.Window;
 import android.view.View.OnClickListener;
+import android.view.Window;
 import android.view.animation.Animation;
 import android.view.animation.Animation.AnimationListener;
 import android.view.animation.TranslateAnimation;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.ImageButton;
 import android.widget.Toast;
+
+import com.cookpadintern.twitdx.R;
+import com.cookpadintern.twitdx.common.Const;
+import com.cookpadintern.twitdx.common.Utils;
+import com.cookpadintern.twitdx.customize.BaseActivity;
+import com.cookpadintern.twitdx.customize.MainApplication;
+import com.cookpadintern.twitdx.customize.TweetListviewAdapter;
 
 public class TimelineActivity extends BaseActivity implements OnClickListener {
     protected MainApplication mMainApp;

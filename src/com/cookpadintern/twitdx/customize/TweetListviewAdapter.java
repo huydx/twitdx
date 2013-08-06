@@ -1,8 +1,5 @@
 package com.cookpadintern.twitdx.customize;
 
-import com.cookpadintern.twitdx.R;
-import com.cookpadintern.twitdx.common.*;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -14,6 +11,10 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.cookpadintern.twitdx.R;
+import com.cookpadintern.twitdx.common.Const;
+import com.cookpadintern.twitdx.common.ImageLoader;
 
 public class TweetListviewAdapter extends BaseAdapter {
 
