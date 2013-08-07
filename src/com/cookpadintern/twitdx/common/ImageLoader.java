@@ -1,14 +1,14 @@
 /*
 author:huydx
 github:https://github.com/huydx
-*/
+ */
 package com.cookpadintern.twitdx.common;
 
-import com.cookpadintern.twitdx.R;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -19,177 +19,197 @@ import java.util.WeakHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.util.Log;
 import android.widget.ImageView;
 
+import com.cookpadintern.twitdx.R;
+import com.cookpadintern.twitdx.util.CloseableUtils;
+
 public class ImageLoader {
-    
-    MemoryCache memoryCache=new MemoryCache();
-    FileCache fileCache;
-    private Map<ImageView, String> imageViews=Collections.synchronizedMap(new WeakHashMap<ImageView, String>());
-    ExecutorService executorService; 
-    
+    private static final String TAG = ImageLoader.class.getSimpleName();
+    private static final int BITMAP_REQUIRED_SIZE = 70;
+    private final int stubId = R.drawable.no_image;
+
+    private MemoryCache mMemoryCache = new MemoryCache();
+    private FileCache mFileCache;
+    private Map<ImageView, String> mImageViews =
+            Collections.synchronizedMap(new WeakHashMap<ImageView, String>());
+    private ExecutorService mExecutorService;
+
     public ImageLoader(Context context){
-        fileCache=new FileCache(context);
-        executorService = Executors.newFixedThreadPool(5);
+        mFileCache = new FileCache(context);
+        mExecutorService = Executors.newFixedThreadPool(5);
     }
-    
-    final int stub_id = R.drawable.no_image;
-    public void DisplayImage(String url, ImageView imageView)
-    {
-        imageViews.put(imageView, url);
-        Bitmap bitmap=memoryCache.get(url);
-        if(bitmap!=null)
+
+    public void DisplayImage(String url, ImageView imageView) {
+        mImageViews.put(imageView, url);
+        Bitmap bitmap = mMemoryCache.get(url);
+        if (bitmap != null) {
             imageView.setImageBitmap(bitmap);
-        else
-        {
+        } else {
             queuePhoto(url, imageView);
-            imageView.setImageResource(stub_id);
+            imageView.setImageResource(stubId);
         }
     }
-        
-    private void queuePhoto(String url, ImageView imageView)
-    {
-        PhotoToLoad p=new PhotoToLoad(url, imageView);
-        executorService.submit(new PhotosLoader(p));
+
+    private void queuePhoto(String url, ImageView imageView) {
+        PhotoToLoad photo = new PhotoToLoad(url, imageView);
+        mExecutorService.submit(new PhotosLoader(photo));
     }
-    
-    private Bitmap getBitmap(String url) 
-    {
-        File f=fileCache.getFile(url);
-        
+
+    private Bitmap getBitmap(String url) {
         //from SD cache
-        Bitmap b = decodeFile(f);
-        if(b!=null)
-            return b;
-        
+        Bitmap bitmap = getBitmapFromFile(url);
+        if (bitmap != null) return bitmap;
+
         //from web
         try {
-            Bitmap bitmap=null;
+            return getBitmapFromNetwork(url);
+        } catch (IOException e) {
+            Log.d(TAG, "An error occurred while fetching image from network", e);
+            return null;
+        }
+    }
+
+    public static void CopyStream(InputStream is, OutputStream os) throws IOException {
+        final int bufferSize = 1024;
+        byte[] bytes = new byte[bufferSize];
+        while (true) {
+            int count = is.read(bytes, 0, bufferSize);
+            if (count == -1)
+                break;
+            os.write(bytes, 0, count);
+        }
+    }
+
+    private Bitmap getBitmapFromFile(String url) {
+        File file = mFileCache.getFile(url);
+        return decodeFile(file);
+    }
+
+    private Bitmap getBitmapFromNetwork(String url) throws IOException {
+        InputStream is = null;
+        OutputStream os = null;
+        try {
             URL imageUrl = new URL(url);
-            HttpURLConnection conn = (HttpURLConnection)imageUrl.openConnection();
+            HttpURLConnection conn = (HttpURLConnection) imageUrl.openConnection();
             conn.setConnectTimeout(30000);
             conn.setReadTimeout(30000);
             conn.setInstanceFollowRedirects(true);
-            InputStream is=conn.getInputStream();
-            OutputStream os = new FileOutputStream(f);
-            CopyStream(is, os);
-            os.close();
-            bitmap = decodeFile(f);
-            return bitmap;
-        } catch (Exception ex){
-           ex.printStackTrace();
-           return null;
-        }
-    }
 
-    public static void CopyStream(InputStream is, OutputStream os) {
-        final int buffer_size = 1024;
-        try {
-            byte[] bytes = new byte[buffer_size];
-            for (;;) {
-                int count = is.read(bytes, 0, buffer_size);
-                if (count == -1)
-                    break;
-                os.write(bytes, 0, count);
-            }
-        } catch (Exception ex) {
+            is = conn.getInputStream();
+            File file = mFileCache.getFile(url);
+            os = new FileOutputStream(file);
+            CopyStream(is, os);
+
+            return decodeFile(file);
+        } catch (IOException e) {
+            CloseableUtils.close(is);
+            CloseableUtils.close(os);
+            throw e; // rethrow exception
         }
     }
 
     //decodes image and scales it to reduce memory consumption
-    private Bitmap decodeFile(File f){
+    private Bitmap decodeFile(File file) {
         try {
             //decode image size
-            BitmapFactory.Options o = new BitmapFactory.Options();
-            o.inJustDecodeBounds = true;
-            BitmapFactory.decodeStream(new FileInputStream(f),null,o);
-            
+            BitmapFactory.Options bitmapOptions = new BitmapFactory.Options();
+            bitmapOptions.inJustDecodeBounds = true;
+            BitmapFactory.decodeStream(new FileInputStream(file), null, bitmapOptions);
+
             //Find the correct scale value. It should be the power of 2.
-            final int REQUIRED_SIZE=70;
-            int width_tmp=o.outWidth, height_tmp=o.outHeight;
-            int scale=1;
-            while(true){
-                if(width_tmp/2<REQUIRED_SIZE || height_tmp/2<REQUIRED_SIZE)
-                    break;
-                width_tmp/=2;
-                height_tmp/=2;
-                scale*=2;
+            int width = bitmapOptions.outWidth;
+            int height = bitmapOptions.outHeight;
+            int scale = 1;
+            while (true) {
+                if (isBoxRequiredSize(width, height)) break;
+
+                width /= 2;
+                height /= 2;
+                scale *= 2;
             }
-            
+
             //decode with inSampleSize
-            BitmapFactory.Options o2 = new BitmapFactory.Options();
-            o2.inSampleSize=scale;
-            return BitmapFactory.decodeStream(new FileInputStream(f), null, o2);
+            BitmapFactory.Options sampleBitmapOptions = new BitmapFactory.Options();
+            sampleBitmapOptions.inSampleSize = scale;
+            return BitmapFactory.decodeStream(new FileInputStream(file), null, sampleBitmapOptions);
         } catch (FileNotFoundException e) {}
         return null;
     }
-    
+
+    private boolean isBoxRequiredSize(int width, int height) {
+        return (width / 2) < BITMAP_REQUIRED_SIZE ||
+                (height / 2) < BITMAP_REQUIRED_SIZE;
+    }
+
     //Task for the queue
-    private class PhotoToLoad
-    {
+    private class PhotoToLoad {
         public String url;
         public ImageView imageView;
-        public PhotoToLoad(String u, ImageView i){
-            url=u; 
-            imageView=i;
+        public PhotoToLoad(String url, ImageView imageView) {
+            this.url = url;
+            this.imageView = imageView;
         }
     }
-    
+
     class PhotosLoader implements Runnable {
         PhotoToLoad photoToLoad;
-        PhotosLoader(PhotoToLoad photoToLoad){
+        PhotosLoader(PhotoToLoad photoToLoad) {
             this.photoToLoad = photoToLoad;
         }
-        
+
         @Override
         public void run() {
-            if(imageViewReused(photoToLoad)) {
-                return;
-            }
-            
-            Bitmap bmp = getBitmap(photoToLoad.url);
-            memoryCache.put(photoToLoad.url, bmp);
-            if(imageViewReused(photoToLoad))
-                return;
-            BitmapDisplayer bd = new BitmapDisplayer(bmp, photoToLoad);
-            Activity a = (Activity)photoToLoad.imageView.getContext();
-            a.runOnUiThread(bd);
+            if (imageViewReused(photoToLoad)) return;
+
+            Bitmap bitmap = getBitmap(photoToLoad.url);
+            mMemoryCache.put(photoToLoad.url, bitmap);
+            if (imageViewReused(photoToLoad)) return;
+
+            BitmapDisplayer bd = new BitmapDisplayer(bitmap, photoToLoad);
+            Activity activity = (Activity) photoToLoad.imageView.getContext();
+            activity.runOnUiThread(bd);
         }
     }
-    
+
     boolean imageViewReused(PhotoToLoad photoToLoad){
-        String tag=imageViews.get(photoToLoad.imageView);
-        if(tag==null || !tag.equals(photoToLoad.url))
+        String tag = mImageViews.get(photoToLoad.imageView);
+        if (tag == null || !tag.equals(photoToLoad.url)) {
             return true;
-        return false;
+        } else {
+            return false;
+        }
     }
-    
+
     //Used to display bitmap in the UI thread
-    class BitmapDisplayer implements Runnable
-    {
+    class BitmapDisplayer implements Runnable {
         Bitmap bitmap;
-        PhotoToLoad photoToLoad;
-        public BitmapDisplayer(Bitmap b, PhotoToLoad p){bitmap=b;photoToLoad=p;}
-        public void run()
-        {
-            if(imageViewReused(photoToLoad))
-                return;
-            if(bitmap!=null)
-                photoToLoad.imageView.setImageBitmap(bitmap);
-            else
-                photoToLoad.imageView.setImageResource(stub_id);
+        PhotoToLoad photo;
+
+        public BitmapDisplayer(Bitmap bitmap, PhotoToLoad photo) {
+            this.bitmap = bitmap;
+            this.photo = photo;
+        }
+
+        public void run() {
+            if (imageViewReused(photo)) return;
+
+            if (bitmap != null) {
+                photo.imageView.setImageBitmap(bitmap);
+            } else {
+                photo.imageView.setImageResource(stubId);
+            }
         }
     }
 
     public void clearCache() {
-        memoryCache.clear();
-        fileCache.clear();
+        mMemoryCache.clear();
+        mFileCache.clear();
     }
-
 }
 

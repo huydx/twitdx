@@ -1,30 +1,31 @@
 /*
 author:huydx
 github:https://github.com/huydx
-*/
+ */
 package com.cookpadintern.twitdx.common;
 
 import java.lang.ref.SoftReference;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+
 import android.graphics.Bitmap;
 
 public class MemoryCache {
-    private Map<String, SoftReference<Bitmap>> cache=Collections.synchronizedMap(new HashMap<String, SoftReference<Bitmap>>());
-    
+    private Map<String, SoftReference<Bitmap>> mCache = Collections.synchronizedMap(new HashMap<String, SoftReference<Bitmap>>());
+
     public Bitmap get(String id){
-        if(!cache.containsKey(id))
+        if(!mCache.containsKey(id))
             return null;
-        SoftReference<Bitmap> ref=cache.get(id);
+        SoftReference<Bitmap> ref=mCache.get(id);
         return ref.get();
     }
-    
+
     public void put(String id, Bitmap bitmap){
-        cache.put(id, new SoftReference<Bitmap>(bitmap));
+        mCache.put(id, new SoftReference<Bitmap>(bitmap));
     }
 
     public void clear() {
-        cache.clear();
+        mCache.clear();
     }
 }
