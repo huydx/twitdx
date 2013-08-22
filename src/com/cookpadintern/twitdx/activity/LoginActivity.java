@@ -25,96 +25,95 @@ import com.cookpadintern.twitdx.customize.BaseActivity;
 import com.cookpadintern.twitdx.customize.MainApplication;
 
 public class LoginActivity extends BaseActivity implements OnClickListener {
-    private ImageButton mLoginButton;
-    private static Twitter sTwitter;
-    private static RequestToken sRequestToken;
+	private ImageButton mLoginButton;
+	private static Twitter sTwitter;
+	private static RequestToken sRequestToken;
 
-    /**
-     * ************************* 
-     * Activity default method
-     * *************************
-     */
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        this.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        setContentView(R.layout.login);
-        mLoginButton = (ImageButton) findViewById(R.id.btn_login);
-        mLoginButton.setOnClickListener(this);
+	/**
+	 * ************************* Activity default method
+	 * *************************
+	 */
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
 
-        FetchTokenTask fetchToken = new FetchTokenTask();
-        fetchToken.execute();
-    }
+		super.onCreate(savedInstanceState);
+		this.requestWindowFeature(Window.FEATURE_NO_TITLE);
+		setContentView(R.layout.login_view);
 
-    @Override
-    public void onClick(View v) {
-        if (!Utils.haveNetworkConnection(this)) {
-            Toast.makeText(this, Const.NETWORK_ERROR, Toast.LENGTH_LONG).show();
-            return;
-        }
-        switch (v.getId()) {
-            case (R.id.btn_login):
-                OauthTask oauthExec = new OauthTask();
-                oauthExec.execute();
-                break;
-            default:
-                break;
-        }
-    }
+		mLoginButton = (ImageButton) findViewById(R.id.btn_login);
+		mLoginButton.setOnClickListener(this);
 
-    /**
-     * ************************* 
-     * Background stuffs
-     * *************************
-     */
-    private class FetchTokenTask extends AsyncTask<Void, Void, Void> {
-        @Override
-        protected Void doInBackground(Void... params) {
+		FetchTokenTask fetchToken = new FetchTokenTask();
+		fetchToken.execute();
+	}
 
-            // handle oAuth callback
-            Uri uri = getIntent().getData();
-            if (uri != null && uri.toString().startsWith(Const.CALLBACK_URL)) {
-                String verifier = uri.getQueryParameter(Const.IEXTRA_OAUTH_VERIFIER);
-                try {
-                    AccessToken accessToken = sTwitter.getOAuthAccessToken(sRequestToken, verifier);
-                    getTwitdxApplication().getAccount().saveToken(accessToken);
-                    startActivity(new Intent(LoginActivity.this, TimelineActivity.class));
-                } catch (Exception e) {
-                    Activity currentActivity = ((MainApplication) getApplicationContext())
-                            .getCurrentActivity();
-                    Toast.makeText(currentActivity, e.getMessage(), Toast.LENGTH_LONG).show();
-                }
-            }
-            return null;
-        }
+	@Override
+	public void onClick(View v) {
+		if (!Utils.haveNetworkConnection(this)) {
+			Toast.makeText(this, Const.NETWORK_ERROR, Toast.LENGTH_LONG).show();
+			return;
+		}
+		switch (v.getId()) {
+		case (R.id.btn_login):
+			OauthTask oauthExec = new OauthTask();
+			oauthExec.execute();
+			break;
+		default:
+			break;
+		}
+	}
 
-        protected void onPostExecute(Void result) {
+	/**
+	 * ************************* Background stuffs *************************
+	 */
+	private class FetchTokenTask extends AsyncTask<Void, Void, Void> {
+		@Override
+		protected Void doInBackground(Void... params) {
 
-        }
-    }
+			// handle oAuth callback
+			Uri uri = getIntent().getData();
+			if (uri != null && uri.toString().startsWith(Const.CALLBACK_URL)) {
+				String verifier = uri.getQueryParameter(Const.IEXTRA_OAUTH_VERIFIER);
+				try {
+					AccessToken accessToken = sTwitter.getOAuthAccessToken(sRequestToken, verifier);
+					getTwitdxApplication().getAccount().saveToken(accessToken);
+					startActivity(new Intent(LoginActivity.this, TimelineActivity.class));
+				} catch (Exception e) {
+					Activity currentActivity = ((MainApplication) getApplicationContext())
+							.getCurrentActivity();
+					Toast.makeText(currentActivity, e.getMessage(), Toast.LENGTH_LONG).show();
+				}
+			}
+			return null;
+		}
 
-    private class OauthTask extends AsyncTask<Void, Void, Void> {
-        @Override
-        protected Void doInBackground(Void... params) {
-            ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
-            configurationBuilder.setOAuthConsumerKey(Const.CONSUMER_KEY);
-            configurationBuilder.setOAuthConsumerSecret(Const.CONSUMER_SECRET);
-            Configuration configuration = configurationBuilder.build();
-            sTwitter = new TwitterFactory(configuration).getInstance();
+		protected void onPostExecute(Void result) {
 
-            try {
-                sRequestToken = sTwitter.getOAuthRequestToken(Const.CALLBACK_URL);
-            } catch (TwitterException e) {
-                e.printStackTrace();
-            }
-            return null;
-        }
+		}
+	}
 
-        protected void onPostExecute(Void result) {
-            Activity currentActivity = ((MainApplication) getApplicationContext())
-                    .getCurrentActivity();
-            currentActivity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(sRequestToken
-                    .getAuthenticationURL())));
-        }
-    }
+	private class OauthTask extends AsyncTask<Void, Void, Void> {
+		@Override
+		protected Void doInBackground(Void... params) {
+			ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
+			configurationBuilder.setOAuthConsumerKey(Const.CONSUMER_KEY);
+			configurationBuilder.setOAuthConsumerSecret(Const.CONSUMER_SECRET);
+			Configuration configuration = configurationBuilder.build();
+			sTwitter = new TwitterFactory(configuration).getInstance();
+
+			try {
+				sRequestToken = sTwitter.getOAuthRequestToken(Const.CALLBACK_URL);
+			} catch (TwitterException e) {
+				e.printStackTrace();
+			}
+			return null;
+		}
+
+		protected void onPostExecute(Void result) {
+			Activity currentActivity = ((MainApplication) getApplicationContext())
+					.getCurrentActivity();
+			currentActivity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(sRequestToken
+					.getAuthenticationURL())));
+		}
+	}
 }

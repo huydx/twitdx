@@ -8,36 +8,46 @@ import android.app.Activity;
 import android.os.Bundle;
 
 public class BaseActivity extends Activity {
-    protected MainApplication mMainApp;
+	protected BaseActivityHelper mActivityHelper;
 
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        mMainApp = (MainApplication)this.getApplicationContext();
-    }
 
-    protected MainApplication getTwitdxApplication() {
-        return (MainApplication) getApplication();
-    }
+	protected MainApplication mMainApp;
 
-    protected void onResume() {
-        super.onResume();
-        mMainApp.setCurrentActivity(this);
-    }
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		mMainApp = (MainApplication) this.getApplicationContext();
+	}
 
-    protected void onPause() {
-        clearReferences();
-        super.onPause();
-    }
+	protected MainApplication getTwitdxApplication() {
+		return (MainApplication) getApplication();
+	}
 
-    protected void onDestroy() {
-        clearReferences();
-        super.onDestroy();
-    }
+	protected void onResume() {
+		super.onResume();
+		mMainApp.setCurrentActivity(this);
+	}
 
-    private void clearReferences(){
-        Activity currActivity = mMainApp.getCurrentActivity();
-        if (currActivity != null && currActivity.equals(this))
-            mMainApp.setCurrentActivity(null);
-    }
+	protected void onPause() {
+		clearReferences();
+		super.onPause();
+	}
+
+	protected void onDestroy() {
+		clearReferences();
+		super.onDestroy();
+	}
+
+	private void clearReferences() {
+		Activity currActivity = mMainApp.getCurrentActivity();
+		if (currActivity != null && currActivity.equals(this))
+			mMainApp.setCurrentActivity(null);
+	}
+	
+	public BaseActivityHelper getActivityHelper() {
+		return mActivityHelper;
+	}
+
+	public void setActivityHelper(BaseActivityHelper mActivityHelper) {
+		this.mActivityHelper = mActivityHelper;
+	}
 }
-

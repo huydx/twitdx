@@ -2,7 +2,6 @@ package com.cookpadintern.twitdx.activity;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 import twitter4j.Status;
 import twitter4j.Twitter;
@@ -12,20 +11,25 @@ import twitter4j.TwitterStream;
 import twitter4j.TwitterStreamFactory;
 import twitter4j.UserStreamAdapter;
 import twitter4j.conf.Configuration;
+
 import android.app.Activity;
-import android.app.ProgressDialog;
+import android.app.Fragment;
+import android.app.FragmentManager;
 import android.content.Intent;
-import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.Window;
-import android.widget.Button;
-import android.widget.ImageButton;
-import android.widget.LinearLayout;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
+import android.support.v4.app.ActionBarDrawerToggle;
+import android.support.v4.widget.DrawerLayout;
 
 import com.cookpadintern.twitdx.R;
 import com.cookpadintern.twitdx.activity.helper.TimelineActivityHelper;
@@ -33,306 +37,313 @@ import com.cookpadintern.twitdx.common.Const;
 import com.cookpadintern.twitdx.common.Utils;
 import com.cookpadintern.twitdx.customize.BaseActivity;
 import com.cookpadintern.twitdx.customize.MainApplication;
-import com.cookpadintern.twitdx.customize.TweetListviewAdapter;
+import com.cookpadintern.twitdx.customize.fragment.AboutFragment;
+import com.cookpadintern.twitdx.customize.fragment.MentionFragment;
+import com.cookpadintern.twitdx.customize.fragment.TimelineFragment;
 import com.cookpadintern.twitdx.model.TwitterAccount;
 
 public class TimelineActivity extends BaseActivity implements OnClickListener {
-    protected MainApplication mMainApp;
+	enum FRAGMENT_TYPE {
+		TIMELINE, MENTION, ABOUT, LOGOUT
+	}
 
-    private static TwitterStream sTwitterStream;
-    private static Twitter sTwitter;
-    private TwitterAccount mAccount;
+	private static final String TAG = "TimelineActivity";
 
-    private LinearLayout mMenu;
-    private LinearLayout mContent;
-    private LinearLayout.LayoutParams mContentParams;
-    private ImageButton mMenuBtn;
-    private ImageButton mPostBtn;
-    private ImageButton mRefreshButton;
+	protected MainApplication mMainApp;
 
-    private Button mTimelineBtn;
-    private Button mMentionBtn;
-    private Button mLogoutBtn;
-    private Button mAboutBtn;
-    private ListView mListView;
+	private static TwitterStream sTwitterStream;
+	private static Twitter sTwitter;
 
-    private ArrayList<HashMap<String, String>> mTweets = null;
-    private ArrayList<HashMap<String, String>> mMentions = null;
+	private TwitterAccount mAccount;
 
-    private TweetListviewAdapter mTweetAdapter;
-    private TweetListviewAdapter mMentionAdapter;
+	private ListView mLeftMenu;
+	private DrawerLayout mTimelineLayout;
+	private String[] mLeftMenuItems;
+	private ActionBarDrawerToggle mMenuChangeToggle;
+	private Fragment mCurrentFragment;
+	private ArrayList<HashMap<String, String>> mTweets = null;
+	private ArrayList<HashMap<String, String>> mMentions = null;
+	
 
-    private int mMenuWidth = 0;
-    private int mCurrentScreenId;
+	/**
+	 * ************************* Activity default override methods
+	 * *************************
+	 */
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.timeline_view);
 
-    private TimelineActivityHelper mActivityHelper;
+		initViews();
+		initActivityOrStartLogin();
+	}
 
-    /**
-     * ************************* 
-     * Activity default override methods
-     * *************************
-     */
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        this.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        setContentView(R.layout.main);
+	private void initViews() {
+		mActivityHelper = new TimelineActivityHelper(this);
+		mLeftMenu = (ListView) findViewById(R.id.left_menu);
+		mTimelineLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+		mLeftMenuItems = getResources().getStringArray(R.array.leftMenuItems);
 
-        mActivityHelper = new TimelineActivityHelper(this);
+		mLeftMenu.setAdapter(new ArrayAdapter<String>(this, R.layout.left_menu, mLeftMenuItems));
+		mLeftMenu.setOnItemClickListener(new DrawerItemClickListener());
 
-        initViews();
-        initActivityOrStartLogin();
-    }
+		mMenuChangeToggle = new ActionBarDrawerToggle(this, /* host Activity */
+		mTimelineLayout, /* DrawerLayout object */
+		R.drawable.ic_drawer, /* nav drawer image to replace 'Up' caret */
+		R.string.drawer_open, /* "open drawer" description for accessibility */
+		R.string.drawer_close /* "close drawer" description for accessibility */
+		) {
+			public void onDrawerClosed(View view) {
+				invalidateOptionsMenu();
+			}
 
-    private void initViews() {
-        mListView = (ListView) findViewById(R.id.tweetListView);
-        mMenu = (LinearLayout) findViewById(R.id.menu);
-        mContent = (LinearLayout) findViewById(R.id.content);
-        mTimelineBtn = (Button) findViewById(R.id.btn_timeline);
-        mMentionBtn = (Button) findViewById(R.id.btn_mention);
-        mAboutBtn = (Button) findViewById(R.id.btn_about);
-        mLogoutBtn = (Button) findViewById(R.id.btn_logout);
-        mPostBtn = (ImageButton) findViewById(R.id.tweet_button);
-        mRefreshButton = (ImageButton) findViewById(R.id.refresh_button);
+			public void onDrawerOpened(View drawerView) {
+				invalidateOptionsMenu();
+			}
+		};
+		mTimelineLayout.setDrawerListener(mMenuChangeToggle);
 
-        mCurrentScreenId = R.id.btn_timeline;
+	}
 
-        mMenuWidth = mMenu.getLayoutParams().width;
-        mContentParams = (LinearLayout.LayoutParams) mContent.getLayoutParams();
-        mContentParams.width = this.getResources().getDisplayMetrics().widthPixels;
-        mContentParams.leftMargin = -mMenuWidth;
-        mContent.setLayoutParams(mContentParams);
-        // find and set listener for btn_menu
-        mMenuBtn = (ImageButton) findViewById(R.id.menu_button);
+	private void initActivityOrStartLogin() {
+		mAccount = getTwitdxApplication().getAccount();
+		if (mAccount.isNotOnline() || !Utils.haveNetworkConnection(this)) {
+			startActivity(new Intent(TimelineActivity.this, LoginActivity.class));
+		} else {
+			Configuration conf = mAccount.buildTwitterConfiguration();
 
-        mMenuBtn.setOnClickListener(this);
-        mTimelineBtn.setOnClickListener(this);
-        mMentionBtn.setOnClickListener(this);
-        mAboutBtn.setOnClickListener(this);
-        mLogoutBtn.setOnClickListener(this);
-        mPostBtn.setOnClickListener(this);
-        mRefreshButton.setOnClickListener(this);
-    }
+			// first fetch current timeline
+			sTwitter = new TwitterFactory(conf).getInstance();
+			sTwitterStream = new TwitterStreamFactory(conf).getInstance();
+			selectItem(0);
+			startStreamingTimeline();
+		}
+	}
 
-    private void initActivityOrStartLogin() {
-        mAccount = getTwitdxApplication().getAccount();
-        if (mAccount.isNotOnline() || !Utils.haveNetworkConnection(this)) {
-            startActivity(new Intent(TimelineActivity.this, LoginActivity.class));
-        } else {
-            Configuration conf = mAccount.buildTwitterConfiguration();
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		switch (requestCode) {
+		case Const.LOGIN_REQUEST:
+			break;
+		default:
+			break;
+		}
+	}
 
-            // first fetch current timeline
-            sTwitter = new TwitterFactory(conf).getInstance();
-            sTwitterStream = new TwitterStreamFactory(conf).getInstance();
+	private TimelineActivityHelper.TweetDialogClickListener mTweetDialogClickListener = new TimelineActivityHelper.TweetDialogClickListener() {
+		@Override
+		public void onOkClick(String tweet) {
+			UpdateStatusTask updateTask = new UpdateStatusTask();
+			updateTask.execute(tweet);
+		}
 
-            setTimelineToView();
-            startStreamingTimeline();
-        }
-    }
+		@Override
+		public void onCancelClick() {
+		}
+	};
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        switch (requestCode) {
-            case Const.LOGIN_REQUEST:
-                break;
-            default:
-                break;
-        }
-    }
+	@Override
+	public void onClick(View v) {
+		switch (v.getId()) {
+		default:
+			// mActivityHelper.slideMenuAnimate(mContent, mMenuWidth);
+			break;
+		}
+	}
 
-    private TimelineActivityHelper.TweetDialogClickListener mTweetDialogClickListener =
-            new TimelineActivityHelper.TweetDialogClickListener() {
-        @Override
-        public void onOkClick(String tweet) {
-            UpdateStatusTask updateTask = new UpdateStatusTask();
-            updateTask.execute(tweet);
-        }
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		// The action bar home/up action should open or close the drawer.
+		// ActionBarDrawerToggle will take care of this.
+		if (mMenuChangeToggle.onOptionsItemSelected(item)) {
+			return true;
+		}
+		// Handle action buttons
+		switch (item.getItemId()) {
+		case R.id.action_post:
+			try {
+				((TimelineActivityHelper) mActivityHelper)
+						.openTweetDialog(mTweetDialogClickListener);
+				return true;
+			} catch (Exception e) {
+				Log.v(TAG, "some error occur at open tweet dialog");
+				return false;
+			}
+		case R.id.action_refresh:
+			if (mCurrentFragment instanceof TimelineFragment) {
+				((TimelineFragment) mCurrentFragment).invalidate();
+			}
+		default:
+			return super.onOptionsItemSelected(item);
+		}
+	}
 
-        @Override
-        public void onCancelClick() {}
-    };
+	// TODO refactoring to helper later
+	/* The click listner for ListView in the navigation drawer */
+	private class DrawerItemClickListener implements ListView.OnItemClickListener {
+		@Override
+		public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+			selectItem(position);
+		}
+	}
 
-    @Override
-    public void onClick(View v) {
-        Button c = (Button) findViewById(mCurrentScreenId);
-        switch (v.getId()) {
-            case R.id.tweet_button:
-                mActivityHelper.openTweetDialog(mTweetDialogClickListener);
-                return;
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.main, menu);
+		return super.onCreateOptionsMenu(menu);
+	}
 
-            case R.id.refresh_button:
-                if (mCurrentScreenId == R.id.btn_timeline) { //at timeline screen
-                    mTweetAdapter.notifyDataSetChanged();
-                    mListView.invalidateViews();
-                }
-                return;
+	/* Called whenever we call invalidateOptionsMenu() */
+	@Override
+	public boolean onPrepareOptionsMenu(Menu menu) {
+		// If the nav drawer is open, hide action items related to the content
+		boolean drawerOpen = mTimelineLayout.isDrawerOpen(mLeftMenu);
+		menu.findItem(R.id.action_post).setVisible(!drawerOpen);
+		menu.findItem(R.id.action_refresh).setVisible(!drawerOpen);
+		return super.onPrepareOptionsMenu(menu);
+	}
 
-            case R.id.btn_about:
-                c.setTextColor(Color.parseColor(getString(R.string.BtnTextNormalColor)));
-                mAboutBtn.setTextColor(Color.parseColor(getString(R.string.BtnTextPressedColor)));
-                mCurrentScreenId = v.getId();
-                // go to about
-                break;
+	@Override
+	protected void onPostCreate(Bundle savedInstanceState) {
+		super.onPostCreate(savedInstanceState);
+		// Sync the toggle state after onRestoreInstanceState has occurred.
+		mMenuChangeToggle.syncState();
+	}
 
-            case R.id.btn_timeline:
-                c.setTextColor(Color.parseColor(getString(R.string.BtnTextNormalColor)));
-                mTimelineBtn.setTextColor(Color.parseColor(getString(R.string.BtnTextPressedColor)));
-                mCurrentScreenId = v.getId();
-                mActivityHelper.slideMenuAnimate(mContent, mMenuWidth);
-                setTimelineToView();
-                mRefreshButton.setVisibility(View.VISIBLE);
-                return;
+	@Override
+	public void onConfigurationChanged(android.content.res.Configuration newConfig) {
+		super.onConfigurationChanged(newConfig);
+		// Pass any configuration change to the drawer toggls
+		mMenuChangeToggle.onConfigurationChanged(newConfig);
+	}
 
-            case R.id.btn_mention:
-                c.setTextColor(Color.parseColor(getString(R.string.BtnTextNormalColor)));
-                mMentionBtn.setTextColor(Color.parseColor(getString(R.string.BtnTextPressedColor)));
-                mCurrentScreenId = v.getId();
-                mActivityHelper.slideMenuAnimate(mContent, mMenuWidth);
-                setMentionListview();
-                mRefreshButton.setVisibility(View.GONE);
-                return;
+	/**
+	 * ************************* 
+	 * Twitter API wrapper methods
+	 * *************************
+	 */
+	public void startStreamingTimeline() {
+		if (sTwitterStream == null)
+			return;
 
-            case R.id.btn_logout:
-                c.setTextColor(Color.parseColor(getString(R.string.BtnTextNormalColor)));
-                mLogoutBtn.setTextColor(Color.parseColor(getString(R.string.BtnTextPressedColor)));
-                mCurrentScreenId = mTimelineBtn.getId();
-                logOut();
-                break;
-            default:
-                mActivityHelper.slideMenuAnimate(mContent, mMenuWidth);
-                break;
-        }
-    }
+		UserStreamAdapter streamAdapter = new UserStreamAdapter() {
+			@Override
+			public void onStatus(final Status status) {
+				mTweets.add(0, ((TimelineActivityHelper) mActivityHelper).makeStatusMap(status));
+			}
+		};
 
-    private void logOut() {
-        mAccount.logOut();
-        startActivity(new Intent(TimelineActivity.this, LoginActivity.class));
-    }
+		sTwitterStream.addListener(streamAdapter);
+		sTwitterStream.user();
+	}
 
-    /**
-     * ************************* 
-     * Twitter API wrapper methods
-     * *************************
-     */
-    private void setTimelineToView() {
-        FetchTimelineTask task = new FetchTimelineTask();
-        task.execute();
-    }
+	private void logOut() {
+		mAccount.logOut();
+		startActivity(new Intent(TimelineActivity.this, LoginActivity.class));
+	}
 
-    private void setMentionListview() {
-        FetchMentionTask task = new FetchMentionTask();
-        task.execute();
-    }
+	private void selectItem(int position) {
+		// 0 timeline // 1 mention // 2 about // 3 log out
+		switch (position) {
+		case 0:
+			setCenterFragment(FRAGMENT_TYPE.TIMELINE);
+			break;
+		case 1:
+			setCenterFragment(FRAGMENT_TYPE.MENTION);
+			break;
+		case 2:
+			setCenterFragment(FRAGMENT_TYPE.ABOUT);
+			break;
+		case 3:
+			logOut();
+			break;
+		default:
+			break;
 
-    public void startStreamingTimeline() {
-        if (sTwitterStream == null) return;
+		}
+		mLeftMenu.setItemChecked(position, true);
+		// drawerlayout have to close layout manually
+		mTimelineLayout.closeDrawer(mLeftMenu);
+	}
 
-        UserStreamAdapter streamAdapter = new UserStreamAdapter() {
-            @Override
-            public void onStatus(final Status status) {
-                mTweets.add(0, mActivityHelper.makeStatusMap(status));
-            }
-        };
+	public void setCenterFragment(FRAGMENT_TYPE type) {
+		FragmentManager fragmentManager = getFragmentManager();
 
-        sTwitterStream.addListener(streamAdapter);
-        sTwitterStream.user();
-    }
+		switch (type) {
+		case TIMELINE:
+			TimelineFragment tmfragment = new TimelineFragment();
+			fragmentManager.beginTransaction().replace(R.id.timline_content_fragment, tmfragment)
+					.commit();
+			mCurrentFragment = tmfragment;
+			break;
+		case MENTION:
+			MentionFragment mtfragment = new MentionFragment();
+			fragmentManager.beginTransaction().replace(R.id.timline_content_fragment, mtfragment)
+				.commit();
+			mCurrentFragment = mtfragment;
+			break;
+		case ABOUT:
+			AboutFragment afragment = new AboutFragment();
+			fragmentManager.beginTransaction().replace(R.id.timline_content_fragment, afragment)
+				.commit();
+			mCurrentFragment = afragment;
+		default:
+			break;
+		}
+	}
 
-    /**
-     * ************************* Background stuffs *************************
-     */
-    private class FetchMentionTask extends AsyncTask<Void, Void, Void> {
-        ProgressDialog progressDialog;
+	/**
+	 * ************************* 
+	 * Background stuffs 
+	 * *************************
+	 */
 
-        @Override
-        protected Void doInBackground(Void... params) {
-            if (mMentions == null) {
-                mMentions = new ArrayList<HashMap<String, String>>();
-            }
+	private class UpdateStatusTask extends AsyncTask<String, Void, Void> {
+		@Override
+		protected Void doInBackground(String... params) {
+			String status = params[0];
+			try {
+				sTwitter.updateStatus(status);
+			} catch (TwitterException e) {
+				Activity currentActivity = ((MainApplication) getApplicationContext())
+						.getCurrentActivity();
+				Toast.makeText(currentActivity, Const.UPDATE_STATUS_ERROR, Toast.LENGTH_SHORT)
+						.show();
+			}
+			return null;
+		}
 
-            try {
-                List<twitter4j.Status> mentions;
-                mentions = sTwitter.getMentionsTimeline();
-                for (twitter4j.Status status : mentions) {
-                    mMentions.add(mActivityHelper.makeStatusMap(status));
-                }
-            } catch (TwitterException e) {
-                e.printStackTrace();
-            }
-            return null;
-        }
+		protected void onPostExecute(Void result) {
+			Activity currentActivity = ((MainApplication) getApplicationContext())
+					.getCurrentActivity();
+			Toast.makeText(currentActivity, Const.UPDATE_STATUS_SUCCESS, Toast.LENGTH_SHORT).show();
+		}
+	}
 
-        protected void onPreExecute() {
-            progressDialog = ProgressDialog.show(TimelineActivity.this, "", "Loading Mention...");
-            return;
-        }
+	/** get/set stuffs **/
+	public Twitter getTwitterApiInstance() {
+		return sTwitter;
+	}
 
-        protected void onPostExecute(Void result) {
-            Activity currentActivity = ((MainApplication) getApplicationContext())
-                    .getCurrentActivity();
-            mMentionAdapter = new TweetListviewAdapter(currentActivity, mMentions);
-            mListView.setAdapter(mMentionAdapter);
-            mMentionAdapter.notifyDataSetChanged();
-            progressDialog.dismiss();
-        }
-    }
+	public void setTwitterApiInstance(Twitter sTwitter) {
+		TimelineActivity.sTwitter = sTwitter;
+	}
 
+	public ArrayList<HashMap<String, String>> getTweetList() {
+		return mTweets;
+	}
 
-    private class FetchTimelineTask extends AsyncTask<Void, Void, Void> {
-        ProgressDialog progressDialog;
+	public ArrayList<HashMap<String, String>> getMentions() {
+		return mMentions;
+	}
 
-        @Override
-        protected Void doInBackground(Void... params) {
-            List<twitter4j.Status> statuses;
-            try {
-                statuses = sTwitter.getHomeTimeline();
-                mTweets = new ArrayList<HashMap<String, String>>();
+	public void setMentionsList(ArrayList<HashMap<String, String>> mMentions) {
+		this.mMentions = mMentions;
+	}
 
-                for (twitter4j.Status status : statuses) {
-                    mTweets.add(mActivityHelper.makeStatusMap(status));
-                }
-            } catch (TwitterException e) {
-                e.printStackTrace();
-            }
-            return null;
-        }
-
-        protected void onPreExecute() {
-            progressDialog = ProgressDialog.show(TimelineActivity.this, "", "Loading Timeline...");
-            return;
-        }
-
-        protected void onPostExecute(Void result) {
-            Activity currentActivity = ((MainApplication) getApplicationContext())
-                    .getCurrentActivity();
-            mTweetAdapter = new TweetListviewAdapter(currentActivity, mTweets);
-            mListView.setAdapter(mTweetAdapter);
-            mTweetAdapter.notifyDataSetChanged();
-            progressDialog.dismiss();
-        }
-    }
-
-    private class UpdateStatusTask extends AsyncTask<String, Void, Void> {
-        @Override
-        protected Void doInBackground(String... params) {
-            String status = params[0];
-            try {
-                sTwitter.updateStatus(status);
-            } catch (TwitterException e) {
-                Activity currentActivity = ((MainApplication) getApplicationContext())
-                        .getCurrentActivity();
-                Toast.makeText(currentActivity, Const.UPDATE_STATUS_ERROR, Toast.LENGTH_SHORT)
-                .show();
-            }
-            return null;
-        }
-
-        protected void onPostExecute(Void result) {
-            Activity currentActivity = ((MainApplication) getApplicationContext())
-                    .getCurrentActivity();
-            Toast.makeText(currentActivity, Const.UPDATE_STATUS_SUCCESS, Toast.LENGTH_SHORT)
-            .show();
-        }
-    }
+	public void setTweetList(ArrayList<HashMap<String, String>> mTweets) {
+		this.mTweets = mTweets;
+	}
 }

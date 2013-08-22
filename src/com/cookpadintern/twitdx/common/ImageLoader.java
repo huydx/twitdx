@@ -39,8 +39,11 @@ public class ImageLoader {
     private Map<ImageView, String> mImageViews =
             Collections.synchronizedMap(new WeakHashMap<ImageView, String>());
     private ExecutorService mExecutorService;
+    private boolean mDownSampleOption;
 
-    public ImageLoader(Context context){
+    //should use option builder instead of boolean parameter
+    public ImageLoader(Context context, boolean needDownSample){ 
+    	mDownSampleOption = needDownSample;
         mFileCache = new FileCache(context);
         mExecutorService = Executors.newFixedThreadPool(5);
     }
@@ -126,14 +129,15 @@ public class ImageLoader {
             int width = bitmapOptions.outWidth;
             int height = bitmapOptions.outHeight;
             int scale = 1;
-            while (true) {
-                if (isBoxRequiredSize(width, height)) break;
-
-                width /= 2;
-                height /= 2;
-                scale *= 2;
+            if (mDownSampleOption == true) {
+	            while (true) {
+	                if (isBoxRequiredSize(width, height)) break;
+	
+	                width /= 2;
+	                height /= 2;
+	                scale *= 2;
+	            }
             }
-
             //decode with inSampleSize
             BitmapFactory.Options sampleBitmapOptions = new BitmapFactory.Options();
             sampleBitmapOptions.inSampleSize = scale;

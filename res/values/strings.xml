@@ -10,4 +10,12 @@
     <string name="BtnTextNormalColor">#ffffff</string>
     <string name="BtnTextPressedColor">#1abc9c</string>
     <string name="avatar">avatar</string>
+    <string name="drawer_open">drawer open</string>
+    <string name="drawer_close">drawer_close</string>
+    <string-array name="leftMenuItems">
+        <item >TimeLine</item>
+        <item >Mention</item>
+        <item >About</item>
+        <item >Log out</item>
+    </string-array>
 </resources>
