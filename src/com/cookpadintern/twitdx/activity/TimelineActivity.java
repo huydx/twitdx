@@ -23,7 +23,6 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
@@ -42,7 +41,7 @@ import com.cookpadintern.twitdx.customize.fragment.MentionFragment;
 import com.cookpadintern.twitdx.customize.fragment.TimelineFragment;
 import com.cookpadintern.twitdx.model.TwitterAccount;
 
-public class TimelineActivity extends BaseActivity implements OnClickListener {
+public class TimelineActivity extends BaseActivity {
 	enum FRAGMENT_TYPE {
 		TIMELINE, MENTION, ABOUT, LOGOUT
 	}
@@ -120,17 +119,6 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
 		}
 	}
 
-	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		super.onActivityResult(requestCode, resultCode, data);
-		switch (requestCode) {
-		case Const.LOGIN_REQUEST:
-			break;
-		default:
-			break;
-		}
-	}
-
 	private TimelineActivityHelper.TweetDialogClickListener mTweetDialogClickListener = new TimelineActivityHelper.TweetDialogClickListener() {
 		@Override
 		public void onOkClick(String tweet) {
@@ -142,15 +130,6 @@ public class TimelineActivity extends BaseActivity implements OnClickListener {
 		public void onCancelClick() {
 		}
 	};
-
-	@Override
-	public void onClick(View v) {
-		switch (v.getId()) {
-		default:
-			// mActivityHelper.slideMenuAnimate(mContent, mMenuWidth);
-			break;
-		}
-	}
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
