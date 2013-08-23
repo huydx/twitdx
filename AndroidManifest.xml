@@ -13,17 +13,17 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
-        android:name="com.cookpadintern.twitdx.customize.MainApplication"
+        android:name="com.cookpadintern.twitdx.core_ext.MainApplication"
         android:allowBackup="true"
         android:icon="@drawable/icon"
         android:label="@string/app_name"
         android:theme="@android:style/Theme.Holo.Light.DarkActionBar" >
         <activity
-            android:name="com.cookpadintern.twitdx.activity.TimelineActivity"
+            android:name="com.cookpadintern.twitdx.ui.TimelineActivity"
             android:label="@string/app_name" >
         </activity>
         <activity
-            android:name="com.cookpadintern.twitdx.activity.SplashActivity"
+            android:name="com.cookpadintern.twitdx.ui.SplashActivity"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -32,7 +32,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="com.cookpadintern.twitdx.activity.LoginActivity"
+            android:name="com.cookpadintern.twitdx.ui.LoginActivity"
             android:label="@string/app_name"
             android:screenOrientation="portrait" >
             <intent-filter>
